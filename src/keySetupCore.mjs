@@ -77,7 +77,7 @@ export const KEY_SETUP_KEYS = Object.freeze([
     id: 'trafikverket',
     title: 'TRAFIKVERKET',
     unlocks: 'Live Swedish road incidents',
-    getUrl: 'https://data.trafikverket.se/',
+    getUrl: 'https://data.trafikverket.se/oauth2/Account/register',
     envVars: Object.freeze(['TRAFIKVERKET_API_KEY']),
     tier: 'free',
   }),
