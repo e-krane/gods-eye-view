@@ -1,5 +1,10 @@
 import { createHash } from 'node:crypto';
-import { normalizeTrafikverketSituations } from '../../src/layers/trafikverket/records.js';
+import {
+  normalizeTrafikverketSituations,
+  TRAFIKVERKET_INCIDENT_TYPES,
+  TRAFIKVERKET_NOTICE_TYPE,
+  TRAFIKVERKET_ROADWORK_TYPE,
+} from '../../src/layers/trafikverket/records.js';
 import { readResponseJsonCapped, coalesceProxyRequest } from './common/http.js';
 import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 
@@ -46,13 +51,12 @@ const INCLUDE_FIELDS = Object.freeze([
   'Deviation.Geometry.Line.WGS84',
 ]);
 
-const INCIDENT_MESSAGE_TYPES = Object.freeze([
-  'Olycka',
-  'Hinder',
-  'Viktig trafikinformation',
-  'Restriktion',
-  'Trafikmeddelande',
-]);
+/** Incident types that qualify a situation on their own. */
+const DIRECT_INCIDENT_TYPES = Object.freeze(
+  Object.keys(TRAFIKVERKET_INCIDENT_TYPES).filter(
+    (type) => type !== TRAFIKVERKET_NOTICE_TYPE,
+  ),
+);
 
 function xmlAttribute(value) {
   return String(value)
@@ -68,6 +72,13 @@ function xmlAttribute(value) {
  * namespace and is only served at schema 1.6: without the namespace or with a
  * retired version the API answers 400 (SOURCE 'Request'), as it does for an
  * unknown field, so INCLUDE_FIELDS must follow the 1.6 model.
+ *
+ * Filters select whole situations, not individual deviations: a match on
+ * `Deviation.*` is true when any deviation matches, and `NOT` means none
+ * does. A situation qualifies when it has a direct incident type, or a
+ * traffic message and no roadworks. Most traffic messages belong to
+ * roadworks, so this keeps the response to tens of kilobytes instead of
+ * megabytes. The normalizer drops the deviations that ride along.
  * @param {string} apiKey
  * @returns {string}
  */
@@ -79,9 +90,13 @@ export function trafikverketIncidentQuery(apiKey) {
     '<REQUEST>' +
     `<LOGIN authenticationkey="${xmlAttribute(apiKey)}" />` +
     '<QUERY objecttype="Situation" namespace="Road.TrafficInfo" schemaversion="1.6">' +
-    '<FILTER>' +
-    `<IN name="Deviation.MessageType" value="${xmlAttribute(INCIDENT_MESSAGE_TYPES.join(','))}" />` +
-    '</FILTER>' +
+    '<FILTER><OR>' +
+    `<IN name="Deviation.MessageType" value="${xmlAttribute(DIRECT_INCIDENT_TYPES.join(','))}" />` +
+    '<AND>' +
+    `<EQ name="Deviation.MessageType" value="${xmlAttribute(TRAFIKVERKET_NOTICE_TYPE)}" />` +
+    `<NOT><EQ name="Deviation.MessageType" value="${xmlAttribute(TRAFIKVERKET_ROADWORK_TYPE)}" /></NOT>` +
+    '</AND>' +
+    '</OR></FILTER>' +
     include +
     '</QUERY>' +
     '</REQUEST>'

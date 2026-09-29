@@ -17,6 +17,15 @@ export const TRAFIKVERKET_INCIDENT_TYPES = Object.freeze({
   Trafikmeddelande: 'notice',
 });
 
+export const TRAFIKVERKET_ROADWORK_TYPE = 'Vägarbete';
+/**
+ * Traffic messages mostly ride along with roadworks: a roadwork situation
+ * carries its lane closures and speed limits as "Trafikmeddelande"
+ * deviations. Only traffic messages in situations without roadworks are
+ * incidents. The proxy's upstream filter applies the same rule.
+ */
+export const TRAFIKVERKET_NOTICE_TYPE = 'Trafikmeddelande';
+
 const INCIDENT_CATEGORIES = new Set(Object.values(TRAFIKVERKET_INCIDENT_TYPES));
 /** Trafikverket impact codes: 1 none, 2 small, 4 large, 5 very large. */
 const SEVERITY_CODES = new Set([1, 2, 4, 5]);
@@ -64,7 +73,8 @@ export function parseWktFirstCoordinate(wkt) {
 /**
  * Normalize one upstream `RESPONSE` body into active incident rows.
  * Returns null when the envelope is malformed; individual deviations without
- * an id, a known incident type or a usable position are skipped, because one
+ * an id, a known incident type or a usable position are skipped, as are
+ * traffic messages in a situation that also has roadworks, because one
  * incomplete record in a national feed must not hide every other incident.
  * @param {object} payload Parsed `/v2/data.json` body.
  * @param {{ now?: number }} [options]
@@ -85,11 +95,16 @@ export function normalizeTrafikverketSituations(
     if (situation.Deleted === true) continue;
     const deviations = situation.Deviation ?? [];
     if (!Array.isArray(deviations)) return null;
+    const hasRoadworks = deviations.some(
+      (deviation) => deviation?.MessageType === TRAFIKVERKET_ROADWORK_TYPE,
+    );
     for (const deviation of deviations) {
       if (!deviation || typeof deviation !== 'object') continue;
       const id = text(deviation.Id, 128);
       const category = TRAFIKVERKET_INCIDENT_TYPES[deviation.MessageType];
       if (!id || !category || ids.has(id)) continue;
+      if (hasRoadworks && deviation.MessageType === TRAFIKVERKET_NOTICE_TYPE)
+        continue;
       const position =
         parseWktFirstCoordinate(deviation.Geometry?.Point?.WGS84) ??
         parseWktFirstCoordinate(deviation.Geometry?.Line?.WGS84);

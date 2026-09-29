@@ -1,5 +1,12 @@
 # Changelog
 
+- Road Incidents (SE) no longer shows roadwork lane closures and speed limits
+  as traffic messages. A roadwork situation carries these as traffic-message
+  deviations, and they made up about 98% of the layer. The proxy now asks
+  Trafikverket only for situations with an accident, obstacle, important
+  information or restriction, or with a traffic message and no roadworks,
+  which cuts each upstream response from megabytes to tens of kilobytes. The
+  normalizer applies the same rule to traffic messages.
 - Road Incidents (SE) (Events group, share-link token `z1`) shows active
   Trafikverket road incidents in Sweden: accidents, obstacles, important
   traffic information, restrictions and traffic messages, colour-coded by type
