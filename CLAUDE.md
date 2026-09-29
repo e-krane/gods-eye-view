@@ -12,6 +12,8 @@ Upstream docs still apply: `CONTRIBUTING.md` (workflow, share-link tokens),
 See "Adding a data layer" below for the registration pattern.
 
 - Trafikverket: Swedish rail/road real-time (train announcements, road incidents, weather stations)
+  (road incidents done: `src/layers/trafikverket/` + `server/providers/trafikverket.js`, the reference
+  for a keyed layer with a server-side proxy; `TrainPosition` and road weather can reuse the proxy and key)
 - BarentsWatch: Norwegian AIS (live + historic vessel tracks), fishing-vessel register
 - SMHI: Swedish weather observations, no key required (air temperature done: `src/layers/smhi/`, the simplest reference for a keyless layer)
 - ACLED: structured conflict/incident events with lat/lon, incl. hybrid-warfare incidents
@@ -70,13 +72,20 @@ previous request before fetching. `getStats()` feeds the status chip via
    `server.middlewares.use('/api/<route>', …)`. List it in `localProviderPlugins()` in
    `server/providers/local.js`. Keyed providers read `process.env.X`, return
    `503 { error: 'no_key' }` when it is unset, and never log key-bearing URLs.
-   Templates: `firms.js` (keyed, cached) and `firePerimeters.js` (keyless).
+   Templates: `trafikverket.js` (keyed POST, cached per key), `firms.js` (keyed, disk cache)
+   and `firePerimeters.js` (keyless). Server tests live under `src/` (the runner only
+   scans `src/`), e.g. `src/data/trafikverketProxy.test.mjs`.
 5. Key (if needed):
    - Add an entry to `KEY_SETUP_KEYS` in `src/keySetupCore.mjs`. That entry is the
      POWER UP / Provider Settings panel; saving writes `.env` via
      `server/standalone/key-setup.js`.
-   - Document the variable in `.env.example`, `scripts/setup-doctor.mjs`,
-     `scripts/pinokio-environment.mjs` and `pinokio/`.
+   - Document the variable in `.env.example`, `scripts/setup-doctor.mjs` (and the
+     credential fixtures in `src/setupDoctor.test.mjs`), `scripts/dev-fresh.sh`,
+     `scripts/pinokio-environment.mjs` and `pinokio/` (`_ENVIRONMENT`, `install.js`,
+     `start.js`, `update.js`).
+   - `vite.config.js` copies `.env` into `process.env` only for undefined variables, so
+     an env var set to an empty string shadows the `.env` value. POWER UP sets
+     `process.env` directly and is unaffected.
    - Set `requiresKeyId` on the layer. On `no_key`, have the source return
      `{ keyRequired: true }` and `getStats()` report `keyRequired: true`; the panel then
      shows "Needs X". Mirror `src/layers/firms/`.

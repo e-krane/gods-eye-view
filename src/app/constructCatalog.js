@@ -24,6 +24,7 @@ import { createApplicationAwareness } from './layers/militaryAwareness.js';
 import { createApplicationFirms } from './layers/firms.js';
 import { createApplicationEarthquakes } from './layers/earthquakes.js';
 import { createApplicationSmhiObservations } from './layers/smhiObservations.js';
+import { createApplicationTrafikverketIncidents } from './layers/trafikverketIncidents.js';
 import { createApplicationFirePerimeters } from './layers/perimeters.js';
 import { createApplicationCables } from './layers/submarineCables.js';
 import { createInfrastructureLayers } from '../data/infrastructure.js';
@@ -55,6 +56,7 @@ const SOURCE_METHODS = Object.freeze({
   cyclones: ['getSnapshot'],
   earthquakes: ['getSnapshot'],
   'smhi-observations': ['getSnapshot'],
+  'trafikverket-road-incidents': ['getSnapshot'],
   'fire-perimeters': ['getSnapshot'],
   cables: ['fetch'],
 });
@@ -186,6 +188,9 @@ export function createApplicationCatalog({
         createCyclonesLayer({ feed: sources.cyclones }),
         createApplicationSmhiObservations({
           source: sources['smhi-observations'],
+        }),
+        createApplicationTrafikverketIncidents({
+          source: sources['trafikverket-road-incidents'],
         }),
         ...createInfrastructureLayers(localGeoJsonServices),
         createApplicationCables({ source: sources.cables }),

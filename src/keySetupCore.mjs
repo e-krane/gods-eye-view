@@ -74,6 +74,14 @@ export const KEY_SETUP_KEYS = Object.freeze([
     tier: 'free',
   }),
   Object.freeze({
+    id: 'trafikverket',
+    title: 'TRAFIKVERKET',
+    unlocks: 'Live Swedish road incidents',
+    getUrl: 'https://data.trafikverket.se/',
+    envVars: Object.freeze(['TRAFIKVERKET_API_KEY']),
+    tier: 'free',
+  }),
+  Object.freeze({
     id: 'tomtom',
     title: 'TOMTOM',
     unlocks: 'Real live traffic (keyless runs a simulation)',

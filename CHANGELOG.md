@@ -1,5 +1,15 @@
 # Changelog
 
+- Road Incidents (SE) (Events group, share-link token `z1`) shows active
+  Trafikverket road incidents in Sweden: accidents, obstacles, important
+  traffic information, restrictions and traffic messages, colour-coded by type
+  and sized by impact, with `Type · road` labels. Roadworks and ferry notices
+  are excluded. It needs a free Trafikverket key (`TRAFIKVERKET_API_KEY`, in
+  POWER UP / Provider Settings); the `/api/trafikverket/incidents` proxy holds
+  the key server-side, caches for two minutes and serves the last snapshot
+  marked stale when Trafikverket fails. Without a key the row reads
+  "Needs Trafikverket"; a rejected key reports an error and never shows rows
+  fetched with an earlier key.
 - SMHI Air Temperature (Weather group, share-link token `z0`) shows the latest
   hourly air temperature at Swedish SMHI stations as colour-banded ground
   points with ambient labels. The browser fetches SMHI open data directly
