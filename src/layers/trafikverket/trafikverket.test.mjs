@@ -89,6 +89,40 @@ test('normalizer keeps active incidents and skips planned, expired or incomplete
   assert.deepEqual([rows[2].lon, rows[2].lat], [11.9, 57.7]);
 });
 
+test('normalizer drops traffic messages that belong to roadworks', () => {
+  const notice = (id) =>
+    deviation(id, { MessageType: 'Trafikmeddelande', Header: null });
+  const payload = {
+    RESPONSE: {
+      RESULT: [
+        {
+          Situation: [
+            {
+              Id: 'roadworks',
+              Deviation: [
+                deviation('works', { MessageType: 'Vägarbete' }),
+                notice('lane-closed'),
+                deviation('crash'),
+              ],
+            },
+            { Id: 'standalone', Deviation: [notice('road-closed')] },
+          ],
+        },
+      ],
+    },
+  };
+  assert.deepEqual(
+    normalizeTrafikverketSituations(payload, { now: NOW }).map((row) => [
+      row.id,
+      row.category,
+    ]),
+    [
+      ['crash', 'accident'],
+      ['road-closed', 'notice'],
+    ],
+  );
+});
+
 test('normalizer rejects malformed envelopes and drops deleted situations', () => {
   assert.equal(normalizeTrafikverketSituations(null), null);
   assert.equal(normalizeTrafikverketSituations({ RESPONSE: {} }), null);

@@ -78,18 +78,22 @@ test('without a key the proxy answers no_key and never calls upstream', async ()
   assert.equal((await request('/other')).status, 404);
 });
 
-test('query carries the escaped key in the POST body and filters incident types', async () => {
+test('query carries the escaped key in the POST body and skips roadwork situations', async () => {
   const xml = trafikverketIncidentQuery('a"b<c>&');
   assert.match(xml, /authenticationkey="a&quot;b&lt;c&gt;&amp;"/);
   assert.match(
     xml,
     /objecttype="Situation" namespace="Road\.TrafficInfo" schemaversion="1\.6"/,
   );
-  assert.match(
-    xml,
-    /<IN name="Deviation\.MessageType" value="Olycka,Hinder,Viktig trafikinformation,Restriktion,Trafikmeddelande" \/>/,
+  assert.ok(
+    xml.includes(
+      '<FILTER><OR>' +
+        '<IN name="Deviation.MessageType" value="Olycka,Hinder,Viktig trafikinformation,Restriktion" />' +
+        '<AND><EQ name="Deviation.MessageType" value="Trafikmeddelande" />' +
+        '<NOT><EQ name="Deviation.MessageType" value="Vägarbete" /></NOT></AND>' +
+        '</OR></FILTER>',
+    ),
   );
-  assert.doesNotMatch(xml, /Vägarbete/);
   let seen;
   const request = install({
     apiKey: () => 'secret-key',
