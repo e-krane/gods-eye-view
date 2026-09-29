@@ -144,6 +144,13 @@ export const DATA_CREDITS = [
     html: 'Earthquakes: Data courtesy of the U.S. Geological Survey',
   },
   {
+    key: 'smhi',
+    html:
+      'Air temperature observations: ' +
+      '<a href="https://www.smhi.se/data" target="_blank" rel="noopener">SMHI</a> ' +
+      '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)',
+  },
+  {
     key: 'nasa-gibs',
     html:
       'Recent imagery: We acknowledge the use of imagery provided by services from ' +

@@ -1,5 +1,16 @@
 # Changelog
 
+- SMHI Air Temperature (Weather group, share-link token `z0`) shows the latest
+  hourly air temperature at Swedish SMHI stations as colour-banded ground
+  points with ambient labels. The browser fetches SMHI open data directly
+  (keyless, CC BY 4.0) every 10 minutes. A malformed feed keeps the last good
+  snapshot and reports the error; a newest observation older than three hours
+  reads STALE. Stations that have not reported this hour are omitted.
+- Fork share-link tokens: layers added by this fork take tokens from the
+  reserved `z0`–`zz` range (`npm run layer-token:next -- <id> --fork`), which
+  upstream's sequential allocation does not reach, so upstream layers can be
+  merged without token collisions. `layer-token:check` validates the fork range
+  in its own order.
 - Public Overpass instances are no longer used by default. Street Traffic
   roads come from TomTom flow tiles, OpenFreeMap vector tiles, or both, chosen
   on the layer row (TomTom / OSM / Hybrid) or with `?trafficRoads=`. With a

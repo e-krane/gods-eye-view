@@ -640,6 +640,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     optionOwner: 'satellites',
   }),
   Object.freeze({
+    id: 'smhi-observations',
+    token: 'z0',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'telegeography-submarine-cables',
     token: 'u',
     disposition: 'enabled-only',
@@ -703,6 +708,35 @@ export function nextLayerStateToken(
   throw new Error('Layer-state token namespace exhausted');
 }
 
+/**
+ * Fork-reserved range. This fork tracks upstream, whose sequential allocation
+ * starts at `00` and would reach `z0` only after over 1,200 more layers, so fork
+ * layers take `z0`-`zz` in order and never contend for upstream's next token.
+ */
+export const FORK_LAYER_STATE_TOKEN_PREFIX = 'z';
+
+/** Return whether a token belongs to the fork-reserved range. */
+export function isForkLayerStateToken(token) {
+  return (
+    typeof token === 'string' &&
+    token.length === 2 &&
+    token[0] === FORK_LAYER_STATE_TOKEN_PREFIX &&
+    LAYER_STATE_TOKEN_ALPHABET.includes(token[1])
+  );
+}
+
+/** Return the next free token in the fork-reserved range. */
+export function nextForkLayerStateToken(
+  reservations = LAYER_STATE_TOKEN_RESERVATIONS,
+) {
+  const occupied = new Set(Object.values(reservations || {}));
+  for (const second of LAYER_STATE_TOKEN_ALPHABET) {
+    const candidate = `${FORK_LAYER_STATE_TOKEN_PREFIX}${second}`;
+    if (!occupied.has(candidate)) return candidate;
+  }
+  throw new Error('Fork layer-state token range exhausted');
+}
+
 function allocationRank(token) {
   if (NEW_SINGLE_CHARACTER_TOKEN_PATTERN.test(token)) return Number(token);
   if (typeof token !== 'string' || token.length !== 2) return Infinity;
@@ -729,7 +763,9 @@ export function validateLayerStateAllocations(
     .sort((left, right) => allocationRank(left[1]) - allocationRank(right[1]));
   const occupied = { ...baseReservations };
   for (const [id, token] of newlyReserved) {
-    const expected = nextLayerStateToken(occupied);
+    const expected = isForkLayerStateToken(token)
+      ? nextForkLayerStateToken(occupied)
+      : nextLayerStateToken(occupied);
     if (token !== expected) {
       throw new Error(
         `Layer-state token for ${id} must be the next free token ${expected}`,
