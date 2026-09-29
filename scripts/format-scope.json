@@ -11,6 +11,8 @@
   "src/data/layerStateTokenLedger.test.mjs",
   "src/data/layerStateForkTokens.test.mjs",
   "src/layers/smhi/smhi.test.mjs",
+  "src/layers/trafikverket/trafikverket.test.mjs",
+  "src/data/trafikverketProxy.test.mjs",
   "scripts/check-package-boundaries.mjs",
   "scripts/precompute-cctv-heights.mjs",
   "src/tooling/precomputeCctvHeights.test.mjs",

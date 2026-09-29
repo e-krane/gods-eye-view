@@ -22,6 +22,7 @@
   ["smhi-observations", "z0"],
   ["telegeography-submarine-cables", "u"],
   ["traffic", "t"],
+  ["trafikverket-road-incidents", "z1"],
   ["transit", "j"],
   ["weather-cyclones", "y"],
   ["weather-lightning", "l"],

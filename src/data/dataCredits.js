@@ -151,6 +151,12 @@ export const DATA_CREDITS = [
       '(<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)',
   },
   {
+    key: 'trafikverket',
+    html:
+      'Swedish road incidents: ' +
+      '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (CC0)',
+  },
+  {
     key: 'nasa-gibs',
     html:
       'Recent imagery: We acknowledge the use of imagery provided by services from ' +

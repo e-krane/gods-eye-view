@@ -881,6 +881,18 @@
     ],
     "external": ["cesium"]
   },
+  "trafikverket": {
+    "exports": ["./layers/trafikverket"],
+    "modules": [
+      "src/layers/trafikverket/index.js",
+      "src/layers/trafikverket/model.js",
+      "src/layers/trafikverket/source.js",
+      "src/layers/trafikverket/records.js",
+      "src/sources/httpBody.js",
+      "src/sources/requestDeadline.js"
+    ],
+    "external": ["cesium"]
+  },
   "smhi": {
     "exports": ["./layers/smhi"],
     "modules": [
@@ -2044,7 +2056,12 @@
       "src/layers/smhi/source.js",
       "src/layers/smhi/model.js",
       "src/layers/smhi/index.js",
-      "src/app/layers/smhiObservations.js"
+      "src/app/layers/smhiObservations.js",
+      "src/layers/trafikverket/records.js",
+      "src/layers/trafikverket/source.js",
+      "src/layers/trafikverket/model.js",
+      "src/layers/trafikverket/index.js",
+      "src/app/layers/trafikverketIncidents.js"
     ],
     "external": [
       "hls.js",
@@ -2533,7 +2550,12 @@
       "src/layers/smhi/records.js",
       "src/layers/smhi/model.js",
       "src/layers/smhi/index.js",
-      "src/app/layers/smhiObservations.js"
+      "src/app/layers/smhiObservations.js",
+      "src/layers/trafikverket/source.js",
+      "src/layers/trafikverket/records.js",
+      "src/layers/trafikverket/model.js",
+      "src/layers/trafikverket/index.js",
+      "src/app/layers/trafikverketIncidents.js"
     ],
     "external": [
       "hls.js",
@@ -2804,6 +2826,16 @@
     "modules": [
       "src/layers/earthquakes/records.js",
       "src/layers/earthquakes/source.js"
+    ],
+    "external": []
+  },
+  "trafikverket-source": {
+    "exports": ["./layers/trafikverket/source"],
+    "modules": [
+      "src/layers/trafikverket/records.js",
+      "src/layers/trafikverket/source.js",
+      "src/sources/httpBody.js",
+      "src/sources/requestDeadline.js"
     ],
     "external": []
   },
