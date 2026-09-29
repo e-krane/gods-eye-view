@@ -16,6 +16,9 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
  * touched. A rejected key answers 502 {error:'auth_failed'} and never serves
  * cached rows fetched with an earlier key. Other upstream failures serve the
  * last good snapshot marked stale, else 502 {error:'trafikverket_unavailable'}.
+ * Upstream is called at most once per TTL per key: successes are cached and
+ * failures are remembered for the same window, so a revoked key or an outage
+ * never turns client polling into repeated upstream calls.
  * Data: CC0 (https://data.trafikverket.se/).
  */
 const API_URL = 'https://api.trafikinfo.trafikverket.se/v2/data.json';
@@ -60,8 +63,8 @@ function xmlAttribute(value) {
 }
 
 /**
- * Build the Situation query. Structure is validated by the API before
- * authentication; field names follow the schema 1.5 model.
+ * Build the Situation query. The API only checks that the XML is well formed
+ * before authentication; field names follow the schema 1.5 model.
  * @param {string} apiKey
  * @returns {string}
  */
@@ -102,6 +105,8 @@ export function trafikverketProxy({
 } = {}) {
   /** @type {?{keyId: string, savedAt: number, value: object}} */
   let cached = null;
+  /** @type {?{keyId: string, at: number, error: Error}} */
+  let failure = null;
   const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 1200 });
 
@@ -147,14 +152,20 @@ export function trafikverketProxy({
     const previous = cached?.keyId === id ? cached : null;
     if (previous && now() - previous.savedAt < TTL_MS)
       return { value: previous.value, stale: false };
+    if (failure?.keyId === id && now() - failure.at < TTL_MS) {
+      if (previous) return { value: previous.value, stale: true };
+      throw failure.error;
+    }
     try {
       const { promise } = coalesceProxyRequest(inFlight, id, async () => {
         const value = await fetchIncidents(key);
         cached = { keyId: id, savedAt: now(), value };
+        failure = null;
         return value;
       });
       return { value: await promise, stale: false };
     } catch (error) {
+      failure = { keyId: id, at: now(), error };
       if (error?.code === 'auth_failed') {
         if (cached?.keyId === id) cached = null;
         throw error;

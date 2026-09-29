@@ -112,11 +112,13 @@ test('query carries the escaped key in the POST body and filters incident types'
 test('a rejected key reports auth_failed and drops the cached snapshot', async () => {
   let mode = 'ok';
   let clock = NOW;
+  let calls = 0;
+  let key = 'key-1';
   const request = install({
     now: () => clock,
-    apiKey: () => 'key-1',
+    apiKey: () => key,
     fetchImpl: async () =>
-      mode === 'ok'
+      ++calls && mode === 'ok'
         ? json(situationBody([accident]))
         : json(
             {
@@ -140,6 +142,16 @@ test('a rejected key reports auth_failed and drops the cached snapshot', async (
   const rejected = await request();
   assert.equal(rejected.status, 502);
   assert.deepEqual(rejected.body, { error: 'auth_failed' });
+  assert.equal(calls, 2);
+
+  clock += 60_000;
+  assert.deepEqual((await request()).body, { error: 'auth_failed' });
+  assert.equal(calls, 2, 'a rejected key is not retried within the TTL');
+
+  mode = 'ok';
+  key = 'key-2';
+  assert.equal((await request()).status, 200, 'a new key is tried at once');
+  assert.equal(calls, 3);
 });
 
 test('snapshots are cached, served stale on upstream failure, and keyed by API key', async () => {
@@ -166,7 +178,19 @@ test('snapshots are cached, served stale on upstream failure, and keyed by API k
   assert.equal(stale.status, 200);
   assert.equal(stale.body.stale, true);
   assert.equal(stale.body.count, 1);
+  assert.equal(calls, 2);
 
+  clock += 60_000;
+  assert.equal((await request()).body.stale, true);
+  assert.equal(calls, 2, 'a failure is not retried within the TTL');
+
+  fail = false;
+  clock += 60_000;
+  const recovered = await request();
+  assert.equal(recovered.body.stale, false);
+  assert.equal(calls, 3, 'upstream is retried once the TTL has passed');
+
+  fail = true;
   key = 'key-2';
   const other = await request();
   assert.equal(other.status, 502, 'a new key never inherits old rows');
