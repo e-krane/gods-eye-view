@@ -13,7 +13,7 @@ See "Adding a data layer" below for the registration pattern.
 
 - Trafikverket: Swedish rail/road real-time (train announcements, road incidents, weather stations)
 - BarentsWatch: Norwegian AIS (live + historic vessel tracks), fishing-vessel register
-- SMHI: Swedish weather observations, no key required
+- SMHI: Swedish weather observations, no key required (air temperature done: `src/layers/smhi/`, the simplest reference for a keyless layer)
 - ACLED: structured conflict/incident events with lat/lon, incl. hybrid-warfare incidents
 - GPSJam: ADS-B-derived GNSS jamming/spoofing heatmap
 - DeepStateMap mirror (GitHub raw GeoJSON): Ukraine frontline control polygons
@@ -87,11 +87,17 @@ previous request before fetching. `getStats()` feeds the status chip via
 7. Catalog: add `src/app/layers/<name>.js` (wires the factory to app services). Add the
    layer to the `createLayerCatalog([...])` array in `src/app/constructCatalog.js`.
    A layer missing from the registries below throws at startup.
-8. Share-link token: rebase on `main`, then run `npm run layer-token:next -- <id>`.
-   Add the token to `src/data/layerStateTokenReservations.json` and to
-   `LAYER_STATE_REGISTRY` in `src/data/layerState.js` (sorted by id). Bump the pinned
-   layer counts in `src/data/layerState.test.mjs` and `src/app/constructCatalog.test.mjs`.
-   Never change or reuse a published token.
+8. Share-link token: fork layers use the reserved `z0`-`zz` range so they never
+   collide with tokens upstream allocates (this fork keeps merging upstream). Run
+   `npm run layer-token:next -- <id> --fork` (without `--fork` it prints upstream's
+   next token; don't use that for fork layers). Add the token to
+   `src/data/layerStateTokenReservations.json` and to `LAYER_STATE_REGISTRY` in
+   `src/data/layerState.js` (sorted by id). Update the pins: layer counts in
+   `src/data/layerState.test.mjs` and `src/app/constructCatalog.test.mjs`, and the
+   counts, encoded `l` length and fork-token map in
+   `src/data/layerStateTokenLedger.test.mjs`. Never change or reuse a published token.
+   When merging upstream, keep both sides' ledger rows and registry entries, then
+   re-add the pins.
 9. Panel: add the id to `PANEL_GROUPS` (and optionally `PANEL_LABELS`) in
    `src/ui/layerPanel.js`.
 10. Packaging: add `./layers/<family>` (and `/source`) to `package.json` `exports`;
