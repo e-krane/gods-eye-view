@@ -6,8 +6,9 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
 /**
  * Trafikverket open API proxy for the Road Incidents layer.
  * Upstream: POST https://api.trafikinfo.trafikverket.se/v2/data.json with an
- * XML query (Situation, schema 1.5). The API key travels in the request body,
- * so it stays server-side; the browser only sees compact normalized rows.
+ * XML query (Situation, namespace Road.TrafficInfo, schema 1.6). The API key
+ * travels in the request body, so it stays server-side; the browser only sees
+ * compact normalized rows.
  *
  * Routes:
  *   GET /api/trafikverket/incidents → {fetchedAt, stale, count, rows}
@@ -63,8 +64,10 @@ function xmlAttribute(value) {
 }
 
 /**
- * Build the Situation query. The API only checks that the XML is well formed
- * before authentication; field names follow the schema 1.5 model.
+ * Build the Situation query. `Situation` lives in the `Road.TrafficInfo`
+ * namespace and is only served at schema 1.6: without the namespace or with a
+ * retired version the API answers 400 (SOURCE 'Request'), as it does for an
+ * unknown field, so INCLUDE_FIELDS must follow the 1.6 model.
  * @param {string} apiKey
  * @returns {string}
  */
@@ -75,7 +78,7 @@ export function trafikverketIncidentQuery(apiKey) {
   return (
     '<REQUEST>' +
     `<LOGIN authenticationkey="${xmlAttribute(apiKey)}" />` +
-    '<QUERY objecttype="Situation" schemaversion="1.5">' +
+    '<QUERY objecttype="Situation" namespace="Road.TrafficInfo" schemaversion="1.6">' +
     '<FILTER>' +
     `<IN name="Deviation.MessageType" value="${xmlAttribute(INCIDENT_MESSAGE_TYPES.join(','))}" />` +
     '</FILTER>' +

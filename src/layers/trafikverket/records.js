@@ -1,7 +1,7 @@
 /**
- * Trafikverket Situation (schema 1.5) records. Pure and portable: the server
- * proxy normalizes the upstream response with these functions, and the
- * browser source re-validates the compact rows it receives.
+ * Trafikverket Situation (Road.TrafficInfo, schema 1.6) records. Pure and
+ * portable: the server proxy normalizes the upstream response with these
+ * functions, and the browser source re-validates the compact rows it receives.
  */
 
 /**
