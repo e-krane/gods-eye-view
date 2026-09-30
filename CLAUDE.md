@@ -17,7 +17,9 @@ See "Adding a data layer" below for the registration pattern.
 - BarentsWatch: Norwegian AIS (live + historic vessel tracks), fishing-vessel register
 - SMHI: Swedish weather observations, no key required (air temperature done: `src/layers/smhi/`, the simplest reference for a keyless layer)
 - ACLED: structured conflict/incident events with lat/lon, incl. hybrid-warfare incidents
-- GPSJam: ADS-B-derived GNSS jamming/spoofing heatmap
+- GPSJam: ADS-B-derived GNSS jamming/spoofing heatmap (done: `src/layers/gnss/` + `server/providers/gpsjam.js`,
+  the reference for a keyless server-side proxy that reshapes an upstream file; the layer id is source-neutral
+  so a live feed from the app's own adsb.lol data could drive it later)
 - DeepStateMap mirror (GitHub raw GeoJSON): Ukraine frontline control polygons
 - GDELT: broader event aggregation for sabotage/hybrid incidents across Europe
 
@@ -73,7 +75,8 @@ previous request before fetching. `getStats()` feeds the status chip via
    `server/providers/local.js`. Keyed providers read `process.env.X`, return
    `503 { error: 'no_key' }` when it is unset, and never log key-bearing URLs.
    Templates: `trafikverket.js` (keyed POST, cached per key), `firms.js` (keyed, disk cache)
-   and `firePerimeters.js` (keyless). Server tests live under `src/` (the runner only
+   `firePerimeters.js` (keyless) and `gpsjam.js` (keyless,
+   reshapes a daily upstream file once, uses a server-only npm dependency). Server tests live under `src/` (the runner only
    scans `src/`), e.g. `src/data/trafikverketProxy.test.mjs`.
 5. Key (if needed):
    - Add an entry to `KEY_SETUP_KEYS` in `src/keySetupCore.mjs`. That entry is the

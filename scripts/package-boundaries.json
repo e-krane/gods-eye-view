@@ -881,6 +881,18 @@
     ],
     "external": ["cesium"]
   },
+  "gnss": {
+    "exports": ["./layers/gnss"],
+    "modules": [
+      "src/layers/gnss/index.js",
+      "src/layers/gnss/model.js",
+      "src/layers/gnss/source.js",
+      "src/layers/gnss/records.js",
+      "src/sources/httpBody.js",
+      "src/sources/requestDeadline.js"
+    ],
+    "external": ["cesium"]
+  },
   "trafikverket": {
     "exports": ["./layers/trafikverket"],
     "modules": [
@@ -2061,7 +2073,12 @@
       "src/layers/trafikverket/source.js",
       "src/layers/trafikverket/model.js",
       "src/layers/trafikverket/index.js",
-      "src/app/layers/trafikverketIncidents.js"
+      "src/app/layers/trafikverketIncidents.js",
+      "src/layers/gnss/records.js",
+      "src/layers/gnss/source.js",
+      "src/layers/gnss/model.js",
+      "src/layers/gnss/index.js",
+      "src/app/layers/gnssInterference.js"
     ],
     "external": [
       "hls.js",
@@ -2555,7 +2572,12 @@
       "src/layers/trafikverket/records.js",
       "src/layers/trafikverket/model.js",
       "src/layers/trafikverket/index.js",
-      "src/app/layers/trafikverketIncidents.js"
+      "src/app/layers/trafikverketIncidents.js",
+      "src/layers/gnss/records.js",
+      "src/layers/gnss/source.js",
+      "src/layers/gnss/model.js",
+      "src/layers/gnss/index.js",
+      "src/app/layers/gnssInterference.js"
     ],
     "external": [
       "hls.js",
@@ -2826,6 +2848,16 @@
     "modules": [
       "src/layers/earthquakes/records.js",
       "src/layers/earthquakes/source.js"
+    ],
+    "external": []
+  },
+  "gnss-source": {
+    "exports": ["./layers/gnss/source"],
+    "modules": [
+      "src/layers/gnss/records.js",
+      "src/layers/gnss/source.js",
+      "src/sources/httpBody.js",
+      "src/sources/requestDeadline.js"
     ],
     "external": []
   },

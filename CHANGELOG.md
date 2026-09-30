@@ -1,5 +1,14 @@
 # Changelog
 
+- GNSS Interference (Events group, share-link token `z2`) shows where aircraft
+  reported degraded GPS/GNSS accuracy over the latest UTC day, from GPSJam:
+  yellow hexagons where 2–10 % of aircraft were affected and red above 10 %,
+  using GPSJam's own formula and thresholds. Low hexagons are not drawn. It is
+  keyless; the `/api/gpsjam/latest` proxy fetches each day once, turns H3 cells
+  into hexagons with the new `h3-js` dependency (server-side only) and serves
+  the last good day marked stale when GPSJam fails. The panel row names the
+  day, reads PARTIAL for days GPSJam flags as incomplete, and STALE once the
+  next day is overdue.
 - Road Incidents (SE) no longer shows roadwork lane closures and speed limits
   as traffic messages. A roadwork situation carries these as traffic-message
   deviations, and they made up about 98% of the layer. The proxy now asks

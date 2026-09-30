@@ -157,6 +157,13 @@ export const DATA_CREDITS = [
       '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (CC0)',
   },
   {
+    key: 'gpsjam',
+    html:
+      'GNSS interference: ' +
+      '<a href="https://gpsjam.org/" target="_blank" rel="noopener">GPSJam</a> ' +
+      '(John Wiseman), from airplanes.live and ADS-B Exchange',
+  },
+  {
     key: 'nasa-gibs',
     html:
       'Recent imagery: We acknowledge the use of imagery provided by services from ' +
