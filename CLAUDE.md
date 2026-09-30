@@ -20,7 +20,8 @@ See "Adding a data layer" below for the registration pattern.
 - GPSJam: ADS-B-derived GNSS jamming/spoofing heatmap (done: `src/layers/gnss/` + `server/providers/gpsjam.js`,
   the reference for a keyless server-side proxy that reshapes an upstream file; the layer id is source-neutral
   so a live feed from the app's own adsb.lol data could drive it later)
-- DeepStateMap mirror (GitHub raw GeoJSON): Ukraine frontline control polygons
+- DeepStateMap mirror (GitHub raw GeoJSON): Ukraine frontline control polygons (done: `src/layers/frontline/`,
+  browser-direct; the archive `deepstate-map-data.geojson.gz` holds every day since 2024-07-08 for a later date slider)
 - GDELT: broader event aggregation for sabotage/hybrid incidents across Europe
 
 ## Conventions
