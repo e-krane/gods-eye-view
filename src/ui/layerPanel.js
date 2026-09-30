@@ -52,6 +52,7 @@ const PANEL_GROUPS = [
       'local-firms',
       'fire-perimeters',
       'trafikverket-road-incidents',
+      'gnss-interference',
     ],
   },
   {

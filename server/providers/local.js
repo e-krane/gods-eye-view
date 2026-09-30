@@ -24,6 +24,7 @@ import { keySetupEndpoint } from '../standalone/key-setup.js';
 import { weatherProxy } from './weather.js';
 import { firePerimetersProxy } from './firePerimeters.js';
 import { trafikverketProxy } from './trafikverket.js';
+import { gpsjamProxy } from './gpsjam.js';
 import { cycloneProxy } from './cyclones.js';
 import { windProxy } from './wind.js';
 
@@ -57,6 +58,7 @@ function localProviderPlugins() {
     cycloneProxy(),
     firePerimetersProxy(),
     trafikverketProxy(),
+    gpsjamProxy(),
     keySetupEndpoint(),
   ];
 }
