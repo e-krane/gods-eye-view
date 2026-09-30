@@ -881,6 +881,18 @@
     ],
     "external": ["cesium"]
   },
+  "trains": {
+    "exports": ["./layers/trains"],
+    "modules": [
+      "src/layers/trains/index.js",
+      "src/layers/trains/model.js",
+      "src/layers/trains/source.js",
+      "src/layers/trains/records.js",
+      "src/sources/httpBody.js",
+      "src/sources/requestDeadline.js"
+    ],
+    "external": ["cesium"]
+  },
   "seabed": {
     "exports": ["./layers/seabed"],
     "modules": [
@@ -2112,7 +2124,12 @@
       "src/layers/seabed/source.js",
       "src/layers/seabed/model.js",
       "src/layers/seabed/index.js",
-      "src/app/layers/seabedIncidents.js"
+      "src/app/layers/seabedIncidents.js",
+      "src/layers/trains/records.js",
+      "src/layers/trains/source.js",
+      "src/layers/trains/model.js",
+      "src/layers/trains/index.js",
+      "src/app/layers/trainPositions.js"
     ],
     "external": [
       "hls.js",
@@ -2622,7 +2639,12 @@
       "src/layers/seabed/source.js",
       "src/layers/seabed/model.js",
       "src/layers/seabed/index.js",
-      "src/app/layers/seabedIncidents.js"
+      "src/app/layers/seabedIncidents.js",
+      "src/layers/trains/records.js",
+      "src/layers/trains/source.js",
+      "src/layers/trains/model.js",
+      "src/layers/trains/index.js",
+      "src/app/layers/trainPositions.js"
     ],
     "external": [
       "hls.js",
@@ -2893,6 +2915,16 @@
     "modules": [
       "src/layers/earthquakes/records.js",
       "src/layers/earthquakes/source.js"
+    ],
+    "external": []
+  },
+  "trains-source": {
+    "exports": ["./layers/trains/source"],
+    "modules": [
+      "src/layers/trains/records.js",
+      "src/layers/trains/source.js",
+      "src/sources/httpBody.js",
+      "src/sources/requestDeadline.js"
     ],
     "external": []
   },

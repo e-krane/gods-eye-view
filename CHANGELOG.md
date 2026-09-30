@@ -1,5 +1,11 @@
 # Changelog
 
+- Trains (SE) (Movement group, share-link token `z5`) shows the live position
+  of every Swedish train that reported to Trafikverket in the last five
+  minutes, about 300 at a time, with `Train 537 · 180 km/h` labels. It uses the
+  existing Trafikverket key; the `/api/trafikverket/trains` route shares the
+  road-incidents proxy, caches for 30 seconds and serves the last positions
+  marked stale when Trafikverket fails. Points move in place between polls.
 - Baltic Seabed Incidents (Events group, share-link token `z4`) maps damage to
   Baltic cables and pipelines since 2023 from a curated, cited dataset. Each
   incident is a point coloured by status (confirmed sabotage, suspected,

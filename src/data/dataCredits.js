@@ -153,7 +153,7 @@ export const DATA_CREDITS = [
   {
     key: 'trafikverket',
     html:
-      'Swedish road incidents: ' +
+      'Swedish road incidents and train positions: ' +
       '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (CC0)',
   },
   {

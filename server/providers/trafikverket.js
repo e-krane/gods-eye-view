@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { normalizeTrafikverketTrainPositions } from '../../src/layers/trains/records.js';
 import {
   normalizeTrafikverketSituations,
   TRAFIKVERKET_INCIDENT_TYPES,
@@ -17,18 +18,21 @@ import { makeRateLimiter, clientKey } from './common/rate-limit.js';
  *
  * Routes:
  *   GET /api/trafikverket/incidents → {fetchedAt, stale, count, rows}
+ *   GET /api/trafikverket/trains    → {fetchedAt, stale, count, rows}
  *
  * Keyless (no TRAFIKVERKET_API_KEY): 503 {error:'no_key'}; upstream is never
  * touched. A rejected key answers 502 {error:'auth_failed'} and never serves
  * cached rows fetched with an earlier key. Other upstream failures serve the
  * last good snapshot marked stale, else 502 {error:'trafikverket_unavailable'}.
- * Upstream is called at most once per TTL per key: successes are cached and
- * failures are remembered for the same window, so a revoked key or an outage
- * never turns client polling into repeated upstream calls.
+ * Each route calls upstream at most once per its TTL per key (incidents two
+ * minutes, trains 30 seconds): successes are cached and failures are
+ * remembered for the same window, so a revoked key or an outage never turns
+ * client polling into repeated upstream calls.
  * Data: CC0 (https://data.trafikverket.se/).
  */
 const API_URL = 'https://api.trafikinfo.trafikverket.se/v2/data.json';
-const TTL_MS = 120_000;
+const INCIDENTS_TTL_MS = 120_000;
+const TRAINS_TTL_MS = 30_000;
 const UPSTREAM_TIMEOUT_MS = 30_000;
 const MAX_UPSTREAM_BYTES = 48 * 1024 * 1024;
 
@@ -103,6 +107,43 @@ export function trafikverketIncidentQuery(apiKey) {
   );
 }
 
+const TRAIN_INCLUDE_FIELDS = Object.freeze([
+  'Train.AdvertisedTrainNumber',
+  'Train.OperationalTrainNumber',
+  'Train.OperationalTrainDepartureDate',
+  'Position.WGS84',
+  'Bearing',
+  'Speed',
+  'TimeStamp',
+  'Status.Active',
+  'Deleted',
+]);
+
+/**
+ * Build the TrainPosition query: every train that reported in the last five
+ * minutes. TrainPosition lives in the `järnväg.trafikinfo` namespace; the
+ * API returns one row per train, about 300 at a time.
+ * @param {string} apiKey
+ * @returns {string}
+ */
+export function trafikverketTrainQuery(apiKey) {
+  const include = TRAIN_INCLUDE_FIELDS.map(
+    (field) => `<INCLUDE>${field}</INCLUDE>`,
+  ).join('');
+  return (
+    '<REQUEST>' +
+    `<LOGIN authenticationkey="${xmlAttribute(apiKey)}" />` +
+    '<QUERY objecttype="TrainPosition" namespace="järnväg.trafikinfo" schemaversion="1.1">' +
+    '<FILTER>' +
+    '<GT name="TimeStamp" value="$dateadd(-0.00:05:00)" />' +
+    '<EQ name="Deleted" value="false" />' +
+    '</FILTER>' +
+    include +
+    '</QUERY>' +
+    '</REQUEST>'
+  );
+}
+
 function upstreamError(payload) {
   const error = payload?.RESPONSE?.RESULT?.[0]?.ERROR;
   return error && typeof error === 'object' ? error : null;
@@ -121,22 +162,21 @@ export function trafikverketProxy({
   now = () => Date.now(),
   apiKey = () => String(process.env.TRAFIKVERKET_API_KEY || '').trim(),
 } = {}) {
-  /** @type {?{keyId: string, savedAt: number, value: object}} */
-  let cached = null;
-  /** @type {?{keyId: string, at: number, error: Error}} */
-  let failure = null;
-  const inFlight = new Map();
   const allow = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 1200 });
 
   const keyId = (key) =>
     createHash('sha256').update(key).digest('hex').slice(0, 16);
 
-  async function fetchIncidents(key) {
+  /** POST one query; throw `auth_failed` for a rejected key. */
+  async function postQuery(xml) {
     const signal = AbortSignal.timeout(UPSTREAM_TIMEOUT_MS);
     const response = await fetchImpl(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/xml', Accept: 'application/json' },
-      body: trafikverketIncidentQuery(key),
+      headers: {
+        'Content-Type': 'text/xml; charset=utf-8',
+        Accept: 'application/json',
+      },
+      body: xml,
       signal,
       redirect: 'error',
     });
@@ -160,38 +200,75 @@ export function trafikverketProxy({
     )
       throw Object.assign(new Error('auth_failed'), { code: 'auth_failed' });
     if (!response.ok || failure) throw new Error('upstream_unavailable');
-    const rows = normalizeTrafikverketSituations(payload, { now: now() });
-    if (!rows) throw new Error('invalid_snapshot');
-    return { fetchedAt: now(), count: rows.length, rows };
+    return payload;
   }
 
-  async function acquire(key) {
-    const id = keyId(key);
-    const previous = cached?.keyId === id ? cached : null;
-    if (previous && now() - previous.savedAt < TTL_MS)
-      return { value: previous.value, stale: false };
-    if (failure?.keyId === id && now() - failure.at < TTL_MS) {
-      if (previous) return { value: previous.value, stale: true };
-      throw failure.error;
+  /**
+   * One cached route. A rejected key never serves rows fetched with an
+   * earlier key; other failures serve the last good value marked stale.
+   */
+  function cachedRoute({ ttlMs, query, normalize }) {
+    /** @type {?{keyId: string, savedAt: number, value: object}} */
+    let cached = null;
+    /** @type {?{keyId: string, at: number, error: Error}} */
+    let failure = null;
+    const inFlight = new Map();
+
+    async function load(key) {
+      const rows = normalize(await postQuery(query(key)), now());
+      if (!rows) throw new Error('invalid_snapshot');
+      return { fetchedAt: now(), count: rows.length, rows };
     }
-    try {
-      const { promise } = coalesceProxyRequest(inFlight, id, async () => {
-        const value = await fetchIncidents(key);
-        cached = { keyId: id, savedAt: now(), value };
-        failure = null;
-        return value;
-      });
-      return { value: await promise, stale: false };
-    } catch (error) {
-      failure = { keyId: id, at: now(), error };
-      if (error?.code === 'auth_failed') {
-        if (cached?.keyId === id) cached = null;
+
+    return async function acquire(key) {
+      const id = keyId(key);
+      const previous = cached?.keyId === id ? cached : null;
+      if (previous && now() - previous.savedAt < ttlMs)
+        return { value: previous.value, stale: false };
+      if (failure?.keyId === id && now() - failure.at < ttlMs) {
+        if (previous) return { value: previous.value, stale: true };
+        throw failure.error;
+      }
+      try {
+        const { promise } = coalesceProxyRequest(inFlight, id, async () => {
+          const value = await load(key);
+          cached = { keyId: id, savedAt: now(), value };
+          failure = null;
+          return value;
+        });
+        return { value: await promise, stale: false };
+      } catch (error) {
+        failure = { keyId: id, at: now(), error };
+        if (error?.code === 'auth_failed') {
+          if (cached?.keyId === id) cached = null;
+          throw error;
+        }
+        if (previous) return { value: previous.value, stale: true };
         throw error;
       }
-      if (previous) return { value: previous.value, stale: true };
-      throw error;
-    }
+    };
   }
+
+  const routes = new Map([
+    [
+      '/incidents',
+      cachedRoute({
+        ttlMs: INCIDENTS_TTL_MS,
+        query: trafikverketIncidentQuery,
+        normalize: (payload, at) =>
+          normalizeTrafikverketSituations(payload, { now: at }),
+      }),
+    ],
+    [
+      '/trains',
+      cachedRoute({
+        ttlMs: TRAINS_TTL_MS,
+        query: trafikverketTrainQuery,
+        normalize: (payload, at) =>
+          normalizeTrafikverketTrainPositions(payload, { now: at }),
+      }),
+    ],
+  ]);
 
   async function handler(req, res) {
     const json = (status, value) => {
@@ -205,8 +282,8 @@ export function trafikverketProxy({
       res.end(JSON.stringify(value));
     };
     if (req.method !== 'GET') return json(405, { error: 'method_not_allowed' });
-    const path = (req.url || '/').split('?')[0];
-    if (path !== '/incidents') return json(404, { error: 'unknown_route' });
+    const acquire = routes.get((req.url || '/').split('?')[0]);
+    if (!acquire) return json(404, { error: 'unknown_route' });
     const key = apiKey();
     if (!key) return json(503, { error: 'no_key' });
     if (!allow(clientKey(req))) return json(429, { error: 'rate_limited' });
