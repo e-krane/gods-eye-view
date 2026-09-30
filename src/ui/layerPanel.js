@@ -28,6 +28,7 @@ const PANEL_GROUPS = [
       'traffic',
       'transit',
       'bikeshare',
+      'trafikverket-train-positions',
     ],
   },
   {
@@ -54,6 +55,7 @@ const PANEL_GROUPS = [
       'trafikverket-road-incidents',
       'gnss-interference',
       'ukraine-frontline',
+      'baltic-seabed-incidents',
     ],
   },
   {

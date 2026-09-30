@@ -13,7 +13,8 @@ See "Adding a data layer" below for the registration pattern.
 
 - Trafikverket: Swedish rail/road real-time (train announcements, road incidents, weather stations)
   (road incidents done: `src/layers/trafikverket/` + `server/providers/trafikverket.js`, the reference
-  for a keyed layer with a server-side proxy; `TrainPosition` and road weather can reuse the proxy and key)
+  for a keyed layer with a server-side proxy; train positions done: `src/layers/trains/`, a second `cachedRoute`
+  in the same proxy; road weather can reuse the proxy and key the same way)
 - BarentsWatch: Norwegian AIS (live + historic vessel tracks), fishing-vessel register
 - SMHI: Swedish weather observations, no key required (air temperature done: `src/layers/smhi/`, the simplest reference for a keyless layer)
 - ACLED: structured conflict/incident events with lat/lon, incl. hybrid-warfare incidents
@@ -23,6 +24,8 @@ See "Adding a data layer" below for the registration pattern.
 - DeepStateMap mirror (GitHub raw GeoJSON): Ukraine frontline control polygons (done: `src/layers/frontline/`,
   browser-direct; the archive `deepstate-map-data.geojson.gz` holds every day since 2024-07-08 for a later date slider)
 - GDELT: broader event aggregation for sabotage/hybrid incidents across Europe
+- Baltic seabed incidents (done: `src/layers/seabed/`, a curated bundled dataset in `incidents.js`; review each
+  incident's `status` and `statusAsOf` as investigations conclude, and bump `SEABED_DATASET_AS_OF`)
 
 ## Conventions
 

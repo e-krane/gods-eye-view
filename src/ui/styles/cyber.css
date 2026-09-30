@@ -628,6 +628,16 @@
   content: '⚔︎';
 }
 :root[data-ui-theme='cyber']
+  .data-toggle-row[data-layer-id='baltic-seabed-incidents']
+  .data-icon::before {
+  content: '⚓︎';
+}
+:root[data-ui-theme='cyber']
+  .data-toggle-row[data-layer-id='trafikverket-train-positions']
+  .data-icon::before {
+  content: '≡';
+}
+:root[data-ui-theme='cyber']
   .data-toggle-row[data-layer-id='local-firms']
   .data-icon::before {
   content: '▲';

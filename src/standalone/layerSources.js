@@ -21,6 +21,8 @@ import { createSmhiObservationSource } from '../layers/smhi/source.js';
 import { createTrafikverketIncidentSource } from '../layers/trafikverket/source.js';
 import { createGnssInterferenceSource } from '../layers/gnss/source.js';
 import { createFrontlineSource } from '../layers/frontline/source.js';
+import { createSeabedIncidentSource } from '../layers/seabed/source.js';
+import { createTrainPositionSource } from '../layers/trains/source.js';
 import { createReferenceSources } from '../sources/reference.js';
 export { createReferenceSources as createStandaloneReferenceSources } from '../sources/reference.js';
 
@@ -51,5 +53,7 @@ export function createStandaloneLayerSources() {
     'trafikverket-road-incidents': createTrafikverketIncidentSource(),
     'gnss-interference': createGnssInterferenceSource(),
     'ukraine-frontline': createFrontlineSource(),
+    'baltic-seabed-incidents': createSeabedIncidentSource(),
+    'trafikverket-train-positions': createTrainPositionSource(),
   };
 }

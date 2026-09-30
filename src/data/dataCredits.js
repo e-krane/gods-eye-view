@@ -153,8 +153,12 @@ export const DATA_CREDITS = [
   {
     key: 'trafikverket',
     html:
-      'Swedish road incidents: ' +
+      'Swedish road incidents and train positions: ' +
       '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (CC0)',
+  },
+  {
+    key: 'baltic-seabed-incidents',
+    html: 'Baltic seabed incidents: curated from the news and official sources cited on each incident card',
   },
   {
     key: 'deepstatemap',

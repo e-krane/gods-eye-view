@@ -564,6 +564,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled-only',
   }),
   Object.freeze({
+    id: 'baltic-seabed-incidents',
+    token: 'z4',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'bhote-koshi-2026',
     token: 'h',
     disposition: 'enabled-only',
@@ -663,6 +668,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
   Object.freeze({
     id: 'trafikverket-road-incidents',
     token: 'z1',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
+    id: 'trafikverket-train-positions',
+    token: 'z5',
     disposition: 'enabled-only',
   }),
   Object.freeze({ id: 'transit', token: 'j', disposition: 'enabled-only' }),

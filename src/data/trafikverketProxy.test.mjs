@@ -203,3 +203,63 @@ test('snapshots are cached, served stale on upstream failure, and keyed by API k
   assert.equal(other.status, 502, 'a new key never inherits old rows');
   assert.deepEqual(other.body, { error: 'trafikverket_unavailable' });
 });
+
+test('trains route queries TrainPosition with its own 30-second cache', async () => {
+  let clock = NOW;
+  const bodies = [];
+  const request = install({
+    now: () => clock,
+    apiKey: () => 'secret-key',
+    fetchImpl: async (url, init) => {
+      bodies.push(init.body);
+      if (init.body.includes('objecttype="TrainPosition"'))
+        return json({
+          RESPONSE: {
+            RESULT: [
+              {
+                TrainPosition: [
+                  {
+                    Train: {
+                      OperationalTrainNumber: '537',
+                      OperationalTrainDepartureDate:
+                        '2026-09-29T00:00:00.000+02:00',
+                      AdvertisedTrainNumber: '537',
+                    },
+                    Position: { WGS84: 'POINT (18.0592 59.3303)' },
+                    TimeStamp: '2026-09-29T13:59:30.000+02:00',
+                    Status: { Active: true },
+                    Speed: 180,
+                  },
+                ],
+              },
+            ],
+          },
+        });
+      return json(situationBody([accident]));
+    },
+  });
+  const trains = await request('/trains');
+  assert.equal(trains.status, 200);
+  assert.deepEqual(
+    trains.body.rows.map(({ id, number, speed }) => [id, number, speed]),
+    [['537:2026-09-29', '537', 180]],
+  );
+  assert.match(
+    bodies[0],
+    /objecttype="TrainPosition" namespace="järnväg\.trafikinfo" schemaversion="1\.1"/,
+  );
+  assert.match(bodies[0], /\$dateadd\(-0\.00:05:00\)/);
+
+  // Incidents keep their own cache; neither route evicts the other.
+  assert.equal((await request('/incidents')).body.count, 1);
+  assert.equal(bodies.length, 2);
+  clock += 29_999;
+  await request('/trains');
+  await request('/incidents');
+  assert.equal(bodies.length, 2);
+  clock += 2;
+  await request('/trains');
+  assert.equal(bodies.length, 3, 'trains refetch after 30 s');
+  await request('/incidents');
+  assert.equal(bodies.length, 3, 'incidents still cached');
+});

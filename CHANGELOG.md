@@ -1,5 +1,22 @@
 # Changelog
 
+- Trains (SE) (Movement group, share-link token `z5`) shows the live position
+  of every Swedish train that reported to Trafikverket in the last five
+  minutes, about 300 at a time, with `Train 537 · 180 km/h` labels. It uses the
+  existing Trafikverket key; the `/api/trafikverket/trains` route shares the
+  road-incidents proxy, caches for 30 seconds and serves the last positions
+  marked stale when Trafikverket fails. Points move in place between polls.
+- Baltic Seabed Incidents (Events group, share-link token `z4`) maps seven
+  incidents of damage to Baltic cables and pipelines, from Balticconnector
+  (October 2023) to the Fitburg case (December 2025), from a curated dataset
+  whose facts were checked against the cited Yle, ERR and Finnish Government
+  pages. Each
+  incident is a point coloured by status (confirmed sabotage, suspected,
+  anchor drag attributed, unresolved, ruled accidental) with a translucent
+  circle showing how precisely the damage point is known. Clicking one opens a
+  card with the date, assets, vessel, summary and status date; clicking the
+  card opens its source. The layer row shows a status legend and the date the
+  dataset was last reviewed.
 - Ukraine Frontline (Events group, share-link token `z3`) shows the
   Russian-occupied territory of Ukraine as DeepStateMap draws it: a
   translucent red fill with the front traced as a ground-clamped line. The
