@@ -1,5 +1,12 @@
 # Changelog
 
+- Ukraine Frontline (Events group, share-link token `z3`) shows the
+  Russian-occupied territory of Ukraine as DeepStateMap draws it: a
+  translucent red fill with the front traced as a ground-clamped line. The
+  browser fetches the newest daily file from the cyterat/deepstate-map-data
+  GitHub mirror directly (keyless), trying today's UTC file first and falling
+  back up to three days before it is published. The panel row names the day
+  and reads STALE once the file is more than two days past it.
 - GNSS Interference (Events group, share-link token `z2`) shows where aircraft
   reported degraded GPS/GNSS accuracy over the latest UTC day, from GPSJam:
   yellow hexagons where 2–10 % of aircraft were affected and red above 10 %,

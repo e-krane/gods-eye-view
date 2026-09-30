@@ -157,6 +157,13 @@ export const DATA_CREDITS = [
       '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (CC0)',
   },
   {
+    key: 'deepstatemap',
+    html:
+      'Occupied territory in Ukraine: ' +
+      '<a href="https://deepstatemap.live/" target="_blank" rel="noopener">DeepStateMap</a>, ' +
+      'via the <a href="https://github.com/cyterat/deepstate-map-data" target="_blank" rel="noopener">cyterat/deepstate-map-data</a> mirror',
+  },
+  {
     key: 'gpsjam',
     html:
       'GNSS interference: ' +

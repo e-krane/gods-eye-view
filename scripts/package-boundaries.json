@@ -881,6 +881,18 @@
     ],
     "external": ["cesium"]
   },
+  "frontline": {
+    "exports": ["./layers/frontline"],
+    "modules": [
+      "src/layers/frontline/index.js",
+      "src/layers/frontline/model.js",
+      "src/layers/frontline/source.js",
+      "src/layers/frontline/records.js",
+      "src/sources/httpBody.js",
+      "src/sources/requestDeadline.js"
+    ],
+    "external": ["cesium"]
+  },
   "gnss": {
     "exports": ["./layers/gnss"],
     "modules": [
@@ -2078,7 +2090,12 @@
       "src/layers/gnss/source.js",
       "src/layers/gnss/model.js",
       "src/layers/gnss/index.js",
-      "src/app/layers/gnssInterference.js"
+      "src/app/layers/gnssInterference.js",
+      "src/layers/frontline/records.js",
+      "src/layers/frontline/source.js",
+      "src/layers/frontline/model.js",
+      "src/layers/frontline/index.js",
+      "src/app/layers/frontline.js"
     ],
     "external": [
       "hls.js",
@@ -2577,7 +2594,12 @@
       "src/layers/gnss/source.js",
       "src/layers/gnss/model.js",
       "src/layers/gnss/index.js",
-      "src/app/layers/gnssInterference.js"
+      "src/app/layers/gnssInterference.js",
+      "src/layers/frontline/records.js",
+      "src/layers/frontline/source.js",
+      "src/layers/frontline/model.js",
+      "src/layers/frontline/index.js",
+      "src/app/layers/frontline.js"
     ],
     "external": [
       "hls.js",
@@ -2848,6 +2870,16 @@
     "modules": [
       "src/layers/earthquakes/records.js",
       "src/layers/earthquakes/source.js"
+    ],
+    "external": []
+  },
+  "frontline-source": {
+    "exports": ["./layers/frontline/source"],
+    "modules": [
+      "src/layers/frontline/records.js",
+      "src/layers/frontline/source.js",
+      "src/sources/httpBody.js",
+      "src/sources/requestDeadline.js"
     ],
     "external": []
   },

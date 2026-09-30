@@ -15,6 +15,7 @@
   "src/data/trafikverketProxy.test.mjs",
   "src/layers/gnss/gnss.test.mjs",
   "src/data/gpsjamProxy.test.mjs",
+  "src/layers/frontline/frontline.test.mjs",
   "scripts/check-package-boundaries.mjs",
   "scripts/precompute-cctv-heights.mjs",
   "src/tooling/precomputeCctvHeights.test.mjs",

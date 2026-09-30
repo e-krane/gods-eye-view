@@ -53,6 +53,7 @@ const PANEL_GROUPS = [
       'fire-perimeters',
       'trafikverket-road-incidents',
       'gnss-interference',
+      'ukraine-frontline',
     ],
   },
   {
