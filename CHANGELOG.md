@@ -1,5 +1,13 @@
 # Changelog
 
+- Baltic Seabed Incidents (Events group, share-link token `z4`) maps damage to
+  Baltic cables and pipelines since 2023 from a curated, cited dataset. Each
+  incident is a point coloured by status (confirmed sabotage, suspected,
+  anchor drag attributed, unresolved, ruled accidental) with a translucent
+  circle showing how precisely the damage point is known. Clicking one opens a
+  card with the date, assets, vessel, summary and status date; clicking the
+  card opens its source. The layer row shows a status legend and the date the
+  dataset was last reviewed.
 - Ukraine Frontline (Events group, share-link token `z3`) shows the
   Russian-occupied territory of Ukraine as DeepStateMap draws it: a
   translucent red fill with the front traced as a ground-clamped line. The

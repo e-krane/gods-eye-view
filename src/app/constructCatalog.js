@@ -27,6 +27,7 @@ import { createApplicationSmhiObservations } from './layers/smhiObservations.js'
 import { createApplicationTrafikverketIncidents } from './layers/trafikverketIncidents.js';
 import { createApplicationGnssInterference } from './layers/gnssInterference.js';
 import { createApplicationFrontline } from './layers/frontline.js';
+import { createApplicationSeabedIncidents } from './layers/seabedIncidents.js';
 import { createApplicationFirePerimeters } from './layers/perimeters.js';
 import { createApplicationCables } from './layers/submarineCables.js';
 import { createInfrastructureLayers } from '../data/infrastructure.js';
@@ -61,6 +62,7 @@ const SOURCE_METHODS = Object.freeze({
   'trafikverket-road-incidents': ['getSnapshot'],
   'gnss-interference': ['getSnapshot'],
   'ukraine-frontline': ['getSnapshot'],
+  'baltic-seabed-incidents': ['getSnapshot'],
   'fire-perimeters': ['getSnapshot'],
   cables: ['fetch'],
 });
@@ -201,6 +203,9 @@ export function createApplicationCatalog({
         }),
         createApplicationFrontline({
           source: sources['ukraine-frontline'],
+        }),
+        createApplicationSeabedIncidents({
+          source: sources['baltic-seabed-incidents'],
         }),
         ...createInfrastructureLayers(localGeoJsonServices),
         createApplicationCables({ source: sources.cables }),

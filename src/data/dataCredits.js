@@ -157,6 +157,10 @@ export const DATA_CREDITS = [
       '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (CC0)',
   },
   {
+    key: 'baltic-seabed-incidents',
+    html: 'Baltic seabed incidents: curated from the news and official sources cited on each incident card',
+  },
+  {
     key: 'deepstatemap',
     html:
       'Occupied territory in Ukraine: ' +

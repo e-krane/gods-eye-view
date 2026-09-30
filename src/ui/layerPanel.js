@@ -54,6 +54,7 @@ const PANEL_GROUPS = [
       'trafikverket-road-incidents',
       'gnss-interference',
       'ukraine-frontline',
+      'baltic-seabed-incidents',
     ],
   },
   {

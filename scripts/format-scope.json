@@ -16,6 +16,7 @@
   "src/layers/gnss/gnss.test.mjs",
   "src/data/gpsjamProxy.test.mjs",
   "src/layers/frontline/frontline.test.mjs",
+  "src/layers/seabed/seabed.test.mjs",
   "scripts/check-package-boundaries.mjs",
   "scripts/precompute-cctv-heights.mjs",
   "src/tooling/precomputeCctvHeights.test.mjs",

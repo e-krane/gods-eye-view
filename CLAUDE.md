@@ -23,6 +23,8 @@ See "Adding a data layer" below for the registration pattern.
 - DeepStateMap mirror (GitHub raw GeoJSON): Ukraine frontline control polygons (done: `src/layers/frontline/`,
   browser-direct; the archive `deepstate-map-data.geojson.gz` holds every day since 2024-07-08 for a later date slider)
 - GDELT: broader event aggregation for sabotage/hybrid incidents across Europe
+- Baltic seabed incidents (done: `src/layers/seabed/`, a curated bundled dataset in `incidents.js`; review each
+  incident's `status` and `statusAsOf` as investigations conclude, and bump `SEABED_DATASET_AS_OF`)
 
 ## Conventions
 
