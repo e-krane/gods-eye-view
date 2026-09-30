@@ -6,8 +6,11 @@
   existing Trafikverket key; the `/api/trafikverket/trains` route shares the
   road-incidents proxy, caches for 30 seconds and serves the last positions
   marked stale when Trafikverket fails. Points move in place between polls.
-- Baltic Seabed Incidents (Events group, share-link token `z4`) maps damage to
-  Baltic cables and pipelines since 2023 from a curated, cited dataset. Each
+- Baltic Seabed Incidents (Events group, share-link token `z4`) maps seven
+  incidents of damage to Baltic cables and pipelines, from Balticconnector
+  (October 2023) to the Fitburg case (December 2025), from a curated dataset
+  whose facts were checked against the cited Yle, ERR and Finnish Government
+  pages. Each
   incident is a point coloured by status (confirmed sabotage, suspected,
   anchor drag attributed, unresolved, ruled accidental) with a translucent
   circle showing how precisely the damage point is known. Clicking one opens a
