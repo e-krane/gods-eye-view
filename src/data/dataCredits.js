@@ -164,6 +164,14 @@ export const DATA_CREDITS = [
       'Topografi 250 (CC0)',
   },
   {
+    key: 'lantmateriet-relief',
+    html:
+      'Terrain relief: hillshade from © ' +
+      '<a href="https://www.lantmateriet.se/" target="_blank" rel="noopener">Lantmäteriet</a> ' +
+      'Markhöjdmodell (' +
+      '<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)',
+  },
+  {
     key: 'baltic-seabed-incidents',
     html: 'Baltic seabed incidents: curated from the news and official sources cited on each incident card',
   },

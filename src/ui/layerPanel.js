@@ -47,6 +47,7 @@ const PANEL_GROUPS = [
       'lantmateriet-power-lines',
       'lantmateriet-railways',
       'lantmateriet-roads',
+      'lantmateriet-relief',
     ],
   },
   {

@@ -19,6 +19,8 @@
   "src/layers/seabed/seabed.test.mjs",
   "src/layers/trains/trains.test.mjs",
   "src/layers/lantmateriet/lantmateriet.test.mjs",
+  "src/layers/lantmateriet/relief.test.mjs",
+  "scripts/build-lantmateriet-hillshade.mjs",
   "scripts/build-lantmateriet.mjs",
   "scripts/check-package-boundaries.mjs",
   "scripts/precompute-cctv-heights.mjs",

@@ -619,6 +619,11 @@ export const LAYER_STATE_REGISTRY = Object.freeze([
     disposition: 'enabled-only',
   }),
   Object.freeze({
+    id: 'lantmateriet-relief',
+    token: 'za',
+    disposition: 'enabled-only',
+  }),
+  Object.freeze({
     id: 'lantmateriet-roads',
     token: 'z8',
     disposition: 'enabled-only',
