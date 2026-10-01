@@ -638,6 +638,21 @@
   content: '≡';
 }
 :root[data-ui-theme='cyber']
+  .data-toggle-row[data-layer-id='lantmateriet-power-lines']
+  .data-icon::before {
+  content: 'ϟ';
+}
+:root[data-ui-theme='cyber']
+  .data-toggle-row[data-layer-id='lantmateriet-railways']
+  .data-icon::before {
+  content: '╫';
+}
+:root[data-ui-theme='cyber']
+  .data-toggle-row[data-layer-id='lantmateriet-roads']
+  .data-icon::before {
+  content: '═';
+}
+:root[data-ui-theme='cyber']
   .data-toggle-row[data-layer-id='local-firms']
   .data-icon::before {
   content: '▲';

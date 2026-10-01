@@ -23,6 +23,7 @@ import { createGnssInterferenceSource } from '../layers/gnss/source.js';
 import { createFrontlineSource } from '../layers/frontline/source.js';
 import { createSeabedIncidentSource } from '../layers/seabed/source.js';
 import { createTrainPositionSource } from '../layers/trains/source.js';
+import { createLantmaterietLineSource } from '../layers/lantmateriet/source.js';
 import { createReferenceSources } from '../sources/reference.js';
 export { createReferenceSources as createStandaloneReferenceSources } from '../sources/reference.js';
 
@@ -55,5 +56,10 @@ export function createStandaloneLayerSources() {
     'ukraine-frontline': createFrontlineSource(),
     'baltic-seabed-incidents': createSeabedIncidentSource(),
     'trafikverket-train-positions': createTrainPositionSource(),
+    'lantmateriet-power-lines': createLantmaterietLineSource({
+      dataset: 'power',
+    }),
+    'lantmateriet-railways': createLantmaterietLineSource({ dataset: 'rail' }),
+    'lantmateriet-roads': createLantmaterietLineSource({ dataset: 'roads' }),
   };
 }

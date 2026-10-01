@@ -29,6 +29,7 @@ import { createApplicationGnssInterference } from './layers/gnssInterference.js'
 import { createApplicationFrontline } from './layers/frontline.js';
 import { createApplicationSeabedIncidents } from './layers/seabedIncidents.js';
 import { createApplicationTrainPositions } from './layers/trainPositions.js';
+import { createApplicationLantmaterietLines } from './layers/lantmaterietLines.js';
 import { createApplicationFirePerimeters } from './layers/perimeters.js';
 import { createApplicationCables } from './layers/submarineCables.js';
 import { createInfrastructureLayers } from '../data/infrastructure.js';
@@ -65,6 +66,9 @@ const SOURCE_METHODS = Object.freeze({
   'ukraine-frontline': ['getSnapshot'],
   'baltic-seabed-incidents': ['getSnapshot'],
   'trafikverket-train-positions': ['getSnapshot'],
+  'lantmateriet-power-lines': ['getSnapshot'],
+  'lantmateriet-railways': ['getSnapshot'],
+  'lantmateriet-roads': ['getSnapshot'],
   'fire-perimeters': ['getSnapshot'],
   cables: ['fetch'],
 });
@@ -211,6 +215,18 @@ export function createApplicationCatalog({
         }),
         createApplicationTrainPositions({
           source: sources['trafikverket-train-positions'],
+        }),
+        createApplicationLantmaterietLines({
+          dataset: 'power',
+          source: sources['lantmateriet-power-lines'],
+        }),
+        createApplicationLantmaterietLines({
+          dataset: 'rail',
+          source: sources['lantmateriet-railways'],
+        }),
+        createApplicationLantmaterietLines({
+          dataset: 'roads',
+          source: sources['lantmateriet-roads'],
         }),
         ...createInfrastructureLayers(localGeoJsonServices),
         createApplicationCables({ source: sources.cables }),

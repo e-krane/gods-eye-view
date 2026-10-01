@@ -26,13 +26,14 @@ See "Adding a data layer" below for the registration pattern.
 - GDELT: broader event aggregation for sabotage/hybrid incidents across Europe
 - Baltic seabed incidents (done: `src/layers/seabed/`, a curated bundled dataset in `incidents.js`; review each
   incident's `status` and `statusAsOf` as investigations conclude, and bump `SEABED_DATASET_AS_OF`)
-- Lantmäteriet static map layers (queued): Swedish power lines, railways and main roads from the open
-  *Topografi 250 Nedladdning, vektor* GeoPackages (themes incl. Ledningar; roads/rail come from Trafikverket's
-  NVDB and railway database). Plan: a build script reads the `.gpkg` files with Node's built-in `node:sqlite`,
-  converts SWEREF 99 TM (EPSG:3006) to WGS84, simplifies, and bundles compact GeoJSON drawn as batched
-  `GroundPolylinePrimitive`s (not entities). Blocked on network access to `geotorget.lantmateriet.se`,
-  `api.lantmateriet.se` and `download-geotorget.lantmateriet.se`, and a free Geotorget account
-  (`LANTMATERIET_USERNAME`/`LANTMATERIET_PASSWORD`) or a manually downloaded file
+- Lantmäteriet static map layers (done: `src/layers/lantmateriet/`, the reference for bundled static lines):
+  Swedish power lines, railways and main roads from the open *Topografi 250 Nedladdning, vektor* (CC0).
+  `scripts/build-lantmateriet.mjs` downloads a Geotorget order through `api.lantmateriet.se` (Basic auth with
+  `LANTMATERIET_USERNAME`/`LANTMATERIET_PASSWORD`, order id from `--order` or `LANTMATERIET_ORDER_ID`; the API
+  cannot list orders) or reads local files with `--from`, reads the GeoPackages with `node:sqlite`, merges,
+  simplifies, converts SWEREF 99 TM to WGS84 and writes delta-encoded JSON to
+  `src/data/local_data/lantmateriet_topografi250/`. Each class is one `GroundPolylinePrimitive` in
+  `scene.groundPrimitives`, not entities. Rebuild when Lantmäteriet updates (power lines every two years)
 
 ## Conventions
 
