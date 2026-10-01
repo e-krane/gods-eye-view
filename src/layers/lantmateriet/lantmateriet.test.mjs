@@ -6,6 +6,8 @@ import {
   lineLengthKm,
   mergeLines,
   parseGpkgLines,
+  parseGpkgPolygons,
+  polygonAreaKm2,
   simplifyLine,
   sweref99tmToWgs84,
   wgs84ToSweref99tm,
@@ -13,7 +15,9 @@ import {
 import { createLantmaterietLineLayer, formatKm } from './index.js';
 import { LANTMATERIET_LINE_STYLES, lineClassVisible } from './model.js';
 import {
+  buildStaticAreaDataset,
   buildStaticLineDataset,
+  validateLantmaterietDataset,
   validateStaticLineDataset,
 } from './records.js';
 import { createLantmaterietLineSource } from './source.js';
@@ -343,7 +347,7 @@ test('classes hide above their height limit', () => {
   assert.equal(formatKm(15229.6), '15,230 km');
 });
 
-function harness(source, { supported = true } = {}) {
+function harness(source, { supported = true, dataset = 'power' } = {}) {
   const added = [];
   const preRender = [];
   const viewer = {
@@ -369,9 +373,15 @@ function harness(source, { supported = true } = {}) {
     },
   };
   const layer = createLantmaterietLineLayer({
-    dataset: 'power',
+    dataset,
     source,
-    createPrimitive: (lines, style) => ({ lines, style, show: true }),
+    createPrimitives: (items, style, geometry) =>
+      geometry === 'area'
+        ? [
+            { kind: 'fill', items, style, show: true },
+            { kind: 'outline', items, style, show: true },
+          ]
+        : [{ lines: items, style, show: true }],
     isSupported: () => supported,
   });
   layer.init(viewer);
@@ -449,4 +459,180 @@ test('a missing dataset reports an error and can retry', async () => {
   assert.equal(await h.layer.update(h.viewer), true);
   assert.equal(h.layer.getStats().error, null);
   h.layer.destroy(h.viewer);
+});
+
+/** WKB polygon (ISO, little-endian, 2D) from rings of [x, y]. */
+function wkbPolygon(rings) {
+  const size = 9 + rings.reduce((n, ring) => n + 4 + ring.length * 16, 0);
+  const view = new DataView(new ArrayBuffer(size));
+  view.setUint8(0, 1);
+  view.setUint32(1, 3, true);
+  view.setUint32(5, rings.length, true);
+  let offset = 9;
+  for (const ring of rings) {
+    view.setUint32(offset, ring.length, true);
+    offset += 4;
+    for (const [x, y] of ring) {
+      view.setFloat64(offset, x, true);
+      view.setFloat64(offset + 8, y, true);
+      offset += 16;
+    }
+  }
+  return new Uint8Array(view.buffer);
+}
+
+function wkbMultiPolygon(parts) {
+  const head = new DataView(new ArrayBuffer(9));
+  head.setUint8(0, 1);
+  head.setUint32(1, 6, true);
+  head.setUint32(5, parts.length, true);
+  return concat(new Uint8Array(head.buffer), ...parts);
+}
+
+const square = (x, y, size) => [
+  [x, y],
+  [x + size, y],
+  [x + size, y + size],
+  [x, y + size],
+  [x, y],
+];
+
+test('GeoPackage polygons keep their holes; lines and polygons stay apart', () => {
+  const outer = square(600000, 6600000, 1000);
+  const hole = square(600200, 6600200, 100);
+  const blob = gpkg(
+    wkbMultiPolygon([
+      wkbPolygon([outer, hole]),
+      wkbPolygon([square(0, 0, 10)]),
+    ]),
+  );
+  assert.deepEqual(parseGpkgPolygons(blob), [
+    [outer, hole],
+    [square(0, 0, 10)],
+  ]);
+  assert.deepEqual(parseGpkgLines(blob), []);
+  assert.deepEqual(
+    parseGpkgPolygons(
+      gpkg(
+        wkbLine([
+          [0, 0],
+          [1, 1],
+        ]),
+      ),
+    ),
+    [],
+  );
+});
+
+test('area is measured in km² and holes are subtracted', () => {
+  // A 0.1° square at 60° N is about 5.56 km × 11.12 km.
+  const ring = [18, 60, 18.1, 60, 18.1, 60.1, 18, 60.1, 18, 60];
+  close(polygonAreaKm2([ring]), 61.8, 0.3, 'square');
+  const hole = [
+    18.02, 60.02, 18.04, 60.02, 18.04, 60.04, 18.02, 60.04, 18.02, 60.02,
+  ];
+  close(
+    polygonAreaKm2([ring, hole]),
+    polygonAreaKm2([ring]) - polygonAreaKm2([hole]),
+    1e-9,
+    'hole',
+  );
+});
+
+function areaRow(objekttypnr, rings) {
+  return {
+    objekttypnr,
+    polygons: [
+      rings.map((ring) =>
+        ring.map(([lon, lat]) => wgs84ToSweref99tm(lon, lat)),
+      ),
+    ],
+  };
+}
+
+const lonLatSquare = (lon, lat, size) => [
+  [lon, lat],
+  [lon + size, lat],
+  [lon + size, lat + size],
+  [lon, lat + size],
+  [lon, lat],
+];
+
+function militaryDataset() {
+  return buildStaticAreaDataset(
+    'military',
+    [
+      areaRow(5503, [
+        lonLatSquare(15, 60, 0.1),
+        lonLatSquare(15.02, 60.02, 0.02),
+      ]),
+      areaRow(5501, [lonLatSquare(16, 61, 0.05)]),
+      areaRow(5501, [lonLatSquare(17, 62, 1e-6)]), // collapses: dropped
+      areaRow(9999, [lonLatSquare(14, 59, 0.1)]), // unknown class
+    ],
+    { producedAt: '2026-09-28' },
+  );
+}
+
+test('area datasets keep classes and holes, drop collapsed areas and validate', () => {
+  const built = militaryDataset();
+  assert.equal(built.format, 'gev-static-areas/1');
+  assert.deepEqual(built.classes, ['ovningsfalt', 'skjutfalt']);
+  assert.deepEqual(
+    built.areas.map(([cls, label, rings]) => [cls, label, rings.length]),
+    [
+      [0, null, 1],
+      [1, null, 2],
+    ],
+  );
+  const outer = decodeLine(built.areas[1][2][0]);
+  assert.deepEqual(outer.slice(0, 2), outer.slice(-2), 'rings stay closed');
+  assert.equal(validateLantmaterietDataset(built, 'military'), built);
+  assert.equal(validateStaticLineDataset(built, 'military'), null);
+  for (const bad of [
+    { ...built, format: 'gev-static-lines/1' },
+    { ...built, areas: [[0, null, []]] },
+    { ...built, areas: [[0, 'name', built.areas[0][2]]] },
+    { ...built, areas: [[0, null, [[1, 2, 3, 4]]]] },
+    { ...built, areas: [[5, null, built.areas[0][2]]] },
+  ])
+    assert.equal(validateLantmaterietDataset(bad, 'military'), null);
+  assert.equal(
+    validateLantmaterietDataset(powerDataset(), 'power').dataset,
+    'power',
+  );
+  assert.throws(() =>
+    buildStaticLineDataset('military', [], { producedAt: 'x' }),
+  );
+  assert.throws(() => buildStaticAreaDataset('power', [], { producedAt: 'x' }));
+});
+
+test('area layer draws a fill and an outline per class with counts and km²', async () => {
+  const h = harness(
+    { getSnapshot: async () => militaryDataset() },
+    { dataset: 'military' },
+  );
+  assert.equal(h.layer.id, 'lantmateriet-military-areas');
+  h.layer.enable(h.viewer);
+  assert.equal(await h.layer.update(h.viewer), true);
+  assert.deepEqual(
+    h.added.map((p) => `${p.kind}:${p.style.label}`),
+    [
+      'fill:Training area',
+      'outline:Training area',
+      'fill:Firing range',
+      'outline:Firing range',
+    ],
+  );
+  const firing = h.added[2];
+  assert.equal(firing.items[0].length, 2, 'outer ring and hole');
+  assert.equal(h.layer.getStats().count, 2);
+  const legend = h.layer.getRowControls().legend;
+  assert.match(legend[0].label, /^Firing range · 1 · 5\d km²$/);
+  assert.match(legend[1].label, /^Training area · 1 · \d+ km²$/);
+  assert.equal(legend[0].count, null);
+  h.layer.disable(h.viewer);
+  assert.ok(h.added.every((p) => p.show === false));
+  h.layer.destroy(h.viewer);
+  assert.equal(h.added.length, 0);
 });

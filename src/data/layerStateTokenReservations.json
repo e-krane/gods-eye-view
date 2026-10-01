@@ -11,6 +11,7 @@
   ["fire-perimeters", "2"],
   ["flights", "f"],
   ["gnss-interference", "z2"],
+  ["lantmateriet-military-areas", "z9"],
   ["lantmateriet-power-lines", "z6"],
   ["lantmateriet-railways", "z7"],
   ["lantmateriet-roads", "z8"],

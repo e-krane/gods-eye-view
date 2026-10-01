@@ -1,4 +1,7 @@
-import { LANTMATERIET_DATASETS, validateStaticLineDataset } from './records.js';
+import {
+  LANTMATERIET_DATASETS,
+  validateLantmaterietDataset,
+} from './records.js';
 
 // Built by scripts/build-lantmateriet.mjs from Lantmäteriet open data (CC0).
 const DATASET_URLS = Object.freeze({
@@ -14,10 +17,14 @@ const DATASET_URLS = Object.freeze({
     '../../data/local_data/lantmateriet_topografi250/roads.json',
     import.meta.url,
   ).href,
+  military: new URL(
+    '../../data/local_data/lantmateriet_topografi250/military.json',
+    import.meta.url,
+  ).href,
 });
 
 /**
- * Serve one bundled, validated Lantmäteriet line dataset.
+ * Serve one bundled, validated Lantmäteriet line or area dataset.
  * @param {{ dataset: string, fetchImpl?: typeof fetch, url?: string }} options
  */
 export function createLantmaterietLineSource({
@@ -43,7 +50,7 @@ export function createLantmaterietLineSource({
       }
       const json = await response.json();
       signal?.throwIfAborted();
-      const valid = validateStaticLineDataset(json, dataset);
+      const valid = validateLantmaterietDataset(json, dataset);
       if (!valid) throw new Error('Malformed Lantmäteriet dataset');
       return valid;
     },

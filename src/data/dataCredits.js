@@ -159,7 +159,7 @@ export const DATA_CREDITS = [
   {
     key: 'lantmateriet',
     html:
-      'Swedish power lines, railways and main roads: © ' +
+      'Swedish power lines, railways, main roads and military areas: © ' +
       '<a href="https://www.lantmateriet.se/" target="_blank" rel="noopener">Lantmäteriet</a> ' +
       'Topografi 250 (CC0)',
   },

@@ -1,5 +1,5 @@
 import * as Cesium from 'cesium';
-import { decodeLine, lineLengthKm } from './geometry.js';
+import { decodeLine, lineLengthKm, polygonAreaKm2 } from './geometry.js';
 import {
   LANTMATERIET_LAYERS,
   LANTMATERIET_LINE_STYLES,
@@ -9,10 +9,15 @@ export * from './model.js';
 export { createLantmaterietLineSource } from './source.js';
 export {
   LANTMATERIET_DATASETS,
+  STATIC_AREAS_FORMAT,
   STATIC_LINES_FORMAT,
+  buildStaticAreaDataset,
   buildStaticLineDataset,
+  validateLantmaterietDataset,
+  validateStaticAreaDataset,
   validateStaticLineDataset,
 } from './records.js';
+import { LANTMATERIET_DATASETS } from './records.js';
 export { decodeLine, encodeLine, sweref99tmToWgs84 } from './geometry.js';
 
 /**
@@ -20,7 +25,7 @@ export { decodeLine, encodeLine, sweref99tmToWgs84 } from './geometry.js';
  * would cost tens of thousands of objects; a primitive batches them all and
  * builds its geometry in Cesium's web workers.
  */
-export function createClassPrimitive(lines, style) {
+function createLinePrimitive(lines, style) {
   const color = Cesium.Color.fromCssColorString(style.color);
   const geometryInstances = lines.map(
     (flat) =>
@@ -56,22 +61,71 @@ export function createClassPrimitive(lines, style) {
   });
 }
 
+/**
+ * A class's ground primitives: one batched line primitive, or for areas a
+ * translucent fill plus that line primitive along every ring.
+ * @param {Array<number[]>|Array<number[][]>} items Flat lon/lat lines, or
+ *   areas as lists of flat rings (outer ring first).
+ * @param {object} style
+ * @param {'line'|'area'} geometry
+ */
+export function createClassPrimitives(items, style, geometry = 'line') {
+  if (geometry !== 'area') return [createLinePrimitive(items, style)];
+  const fillColor = Cesium.ColorGeometryInstanceAttribute.fromColor(
+    Cesium.Color.fromCssColorString(style.color).withAlpha(style.fillAlpha),
+  );
+  const toPositions = (flat) => Cesium.Cartesian3.fromDegreesArray(flat);
+  const fill = new Cesium.GroundPrimitive({
+    geometryInstances: items.map(
+      ([outer, ...holes]) =>
+        new Cesium.GeometryInstance({
+          geometry: new Cesium.PolygonGeometry({
+            polygonHierarchy: new Cesium.PolygonHierarchy(
+              toPositions(outer),
+              holes.map(
+                (hole) => new Cesium.PolygonHierarchy(toPositions(hole)),
+              ),
+            ),
+          }),
+          attributes: { color: fillColor },
+        }),
+    ),
+    appearance: new Cesium.PerInstanceColorAppearance({
+      flat: true,
+      translucent: true,
+    }),
+    asynchronous: true,
+    allowPicking: false,
+  });
+  return [fill, createLinePrimitive(items.flat(), style)];
+}
+
 /** `15,230 km`, rounded to whole kilometres. */
 export function formatKm(km) {
   return `${Math.round(km).toLocaleString('en-US')} km`;
 }
 
+/** `1,234 km²`, rounded to whole square kilometres. */
+export function formatKm2(km2) {
+  return `${Math.round(km2).toLocaleString('en-US')} km²`;
+}
+
 /**
- * Own one bundled Lantmäteriet line dataset (power lines, railways or main
- * roads). The data is static: it loads once, on first enable.
+ * Own one bundled Lantmäteriet dataset: lines (power lines, railways, main
+ * roads) or areas (military areas). The data is static: it loads once, on
+ * first enable.
  */
 export function createLantmaterietLineLayer({
   dataset,
   source,
-  createPrimitive = createClassPrimitive,
-  isSupported = (scene) => Cesium.GroundPolylinePrimitive.isSupported(scene),
+  createPrimitives = createClassPrimitives,
+  isSupported = (scene) =>
+    Cesium.GroundPolylinePrimitive.isSupported(scene) &&
+    (LANTMATERIET_DATASETS[dataset]?.geometry !== 'area' ||
+      Cesium.GroundPrimitive.isSupported(scene)),
 } = {}) {
   const meta = LANTMATERIET_LAYERS[dataset];
+  const geometry = LANTMATERIET_DATASETS[dataset]?.geometry;
   const styles = LANTMATERIET_LINE_STYLES[dataset];
   if (!meta) throw new TypeError(`Unknown Lantmäteriet dataset ${dataset}`);
   if (typeof source?.getSnapshot !== 'function')
@@ -83,40 +137,56 @@ export function createLantmaterietLineLayer({
   let _loaded = null;
   let _lastUpdate = null;
   let _lastError = null;
-  /** @type {Array<{ className: string, style: object, primitive: Cesium.GroundPolylinePrimitive, km: number }>} */
+  /** @type {Array<{ className: string, style: object, primitives: object[], count: number, size: number }>} */
   let _classes = [];
 
   function applyVisibility() {
     const height = _viewer?.camera?.positionCartographic?.height;
-    for (const { style, primitive } of _classes) {
+    for (const { style, primitives } of _classes) {
       const show =
         _enabled &&
         (!Number.isFinite(height) || lineClassVisible(style, height));
-      if (primitive.show !== show) primitive.show = show;
+      for (const primitive of primitives)
+        if (primitive.show !== show) primitive.show = show;
     }
   }
 
   function removePrimitives() {
-    for (const { primitive } of _classes)
-      _viewer?.scene?.groundPrimitives?.remove(primitive);
+    for (const { primitives } of _classes)
+      for (const primitive of primitives)
+        _viewer?.scene?.groundPrimitives?.remove(primitive);
     _classes = [];
   }
 
   function draw(snapshot) {
+    const items = geometry === 'area' ? snapshot.areas : snapshot.lines;
     const byClass = snapshot.classes.map(() => []);
-    for (const [classIndex, , encoded] of snapshot.lines)
-      byClass[classIndex].push(decodeLine(encoded));
+    for (const [classIndex, , coords] of items)
+      byClass[classIndex].push(
+        geometry === 'area' ? coords.map(decodeLine) : decodeLine(coords),
+      );
     _classes = [];
     snapshot.classes.forEach((className, index) => {
       const style = styles[className];
-      if (!style || !byClass[index].length) return;
-      const primitive = createPrimitive(byClass[index], style);
-      _viewer.scene.groundPrimitives.add(primitive);
-      const km = byClass[index].reduce(
-        (sum, flat) => sum + lineLengthKm(flat),
+      const members = byClass[index];
+      if (!style || !members.length) return;
+      const primitives = createPrimitives(members, style, geometry);
+      for (const primitive of primitives)
+        _viewer.scene.groundPrimitives.add(primitive);
+      // Lines are sized by length, areas by the ground they cover.
+      const size = members.reduce(
+        (sum, member) =>
+          sum +
+          (geometry === 'area' ? polygonAreaKm2(member) : lineLengthKm(member)),
         0,
       );
-      _classes.push({ className, style, primitive, km });
+      _classes.push({
+        className,
+        style,
+        primitives,
+        count: members.length,
+        size,
+      });
     });
     applyVisibility();
   }
@@ -196,24 +266,30 @@ export function createLantmaterietLineLayer({
     },
 
     getRowControls() {
-      const lengths = new Map(_classes.map((c) => [c.className, c.km]));
+      const drawn = new Map(_classes.map((c) => [c.className, c]));
       return {
         chips: [],
-        legend: Object.entries(styles).map(([className, style], index) => ({
-          // Lines are merged pieces, so total length is the meaningful size.
-          label: lengths.has(className)
-            ? `${style.label} · ${formatKm(lengths.get(className))}`
-            : style.label,
-          color: style.color,
-          count: null,
-          ...(index === 0 ? { blurb: meta.blurb } : {}),
-        })),
+        legend: Object.entries(styles).map(([className, style], index) => {
+          const entry = drawn.get(className);
+          return {
+            // Lines are merged pieces, so total length is the meaningful
+            // size; areas show how many there are and the ground they cover.
+            label: !entry
+              ? style.label
+              : geometry === 'area'
+                ? `${style.label} · ${entry.count} · ${formatKm2(entry.size)}`
+                : `${style.label} · ${formatKm(entry.size)}`,
+            color: style.color,
+            count: null,
+            ...(index === 0 ? { blurb: meta.blurb } : {}),
+          };
+        }),
       };
     },
 
     getStats() {
       return {
-        count: _loaded?.lines.length ?? 0,
+        count: (_loaded?.lines ?? _loaded?.areas)?.length ?? 0,
         lastUpdate: _lastUpdate,
         // The panel shows when Lantmäteriet produced the bundled data.
         source: _loaded

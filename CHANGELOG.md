@@ -1,5 +1,11 @@
 # Changelog
 
+- Military Areas (SE) (Infrastructure group, share-link token `z9`) shows
+  Lantmäteriet's 120 military training areas and firing ranges as translucent
+  amber and red areas with outlines, from the same Topografi 250 delivery. The
+  layer row lists how many of each there are and the ground they cover. The
+  build script now handles area themes and keeps previously built datasets
+  when only some theme files are supplied.
 - Power Lines (SE), Railways (SE) and Main Roads (SE) (Infrastructure group,
   share-link tokens `z6`, `z7`, `z8`) draw Lantmäteriet's open Topografi 250
   data for all of Sweden: the main grid and regional power lines, the rail
