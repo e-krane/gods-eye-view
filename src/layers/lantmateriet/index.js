@@ -21,44 +21,88 @@ import { LANTMATERIET_DATASETS } from './records.js';
 export { decodeLine, encodeLine, sweref99tmToWgs84 } from './geometry.js';
 
 /**
- * One ground-clamped primitive for every line of a class. Per-line entities
- * would cost tens of thousands of objects; a primitive batches them all and
- * builds its geometry in Cesium's web workers.
+ * One primitive for every line of a class. Per-line entities would cost tens
+ * of thousands of objects; a primitive batches them all and builds its
+ * geometry in Cesium's web workers. Plain polylines, unlike ground-clamped
+ * ones, are anti-aliased by MSAA; they lie on the ellipsoid, under the
+ * terrain, so the depth-fail appearance draws them where terrain hides them.
+ * The layer hides them when its data is behind the horizon.
  */
 function createLinePrimitive(lines, style) {
   const color = Cesium.Color.fromCssColorString(style.color);
-  const geometryInstances = lines.map(
-    (flat) =>
-      new Cesium.GeometryInstance({
-        geometry: new Cesium.GroundPolylineGeometry({
-          positions: Cesium.Cartesian3.fromDegreesArray(flat),
-          width: style.width,
+  const dashed = Boolean(style.gapColor);
+  const appearance = () =>
+    dashed
+      ? new Cesium.PolylineMaterialAppearance({
+          material: Cesium.Material.fromType('PolylineDash', {
+            color,
+            gapColor: Cesium.Color.fromCssColorString(style.gapColor),
+            dashLength: style.dashLength,
+          }),
+        })
+      : new Cesium.PolylineColorAppearance();
+  const colorAttribute = Cesium.ColorGeometryInstanceAttribute.fromColor(color);
+  return new Cesium.Primitive({
+    geometryInstances: lines.map(
+      (flat) =>
+        new Cesium.GeometryInstance({
+          geometry: new Cesium.PolylineGeometry({
+            positions: Cesium.Cartesian3.fromDegreesArray(flat),
+            width: style.width,
+            vertexFormat: dashed
+              ? Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+              : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+            arcType: Cesium.ArcType.GEODESIC,
+          }),
+          ...(dashed
+            ? {}
+            : {
+                attributes: {
+                  color: colorAttribute,
+                  depthFailColor: colorAttribute,
+                },
+              }),
         }),
-        ...(style.gapColor
-          ? {}
-          : {
-              attributes: {
-                color: Cesium.ColorGeometryInstanceAttribute.fromColor(color),
-              },
-            }),
-      }),
-  );
-  const appearance = style.gapColor
-    ? new Cesium.PolylineMaterialAppearance({
-        material: Cesium.Material.fromType('PolylineDash', {
-          color,
-          gapColor: Cesium.Color.fromCssColorString(style.gapColor),
-          dashLength: style.dashLength,
-        }),
-      })
-    : new Cesium.PolylineColorAppearance();
-  return new Cesium.GroundPolylinePrimitive({
-    geometryInstances,
-    appearance,
+    ),
+    appearance: appearance(),
+    depthFailAppearance: appearance(),
     asynchronous: true,
     // Static reference lines are not pickable, so clicks reach the layers above.
     allowPicking: false,
   });
+}
+
+/**
+ * Corners and centre of the data's extent on the ellipsoid, used to tell
+ * whether any of it faces the camera.
+ * @param {number[][]} flats Flat lon/lat lines or rings.
+ */
+export function extentSamplePoints(flats) {
+  let west = Infinity;
+  let east = -Infinity;
+  let south = Infinity;
+  let north = -Infinity;
+  for (const flat of flats)
+    for (let i = 0; i < flat.length; i += 2) {
+      west = Math.min(west, flat[i]);
+      east = Math.max(east, flat[i]);
+      south = Math.min(south, flat[i + 1]);
+      north = Math.max(north, flat[i + 1]);
+    }
+  if (!Number.isFinite(west)) return [];
+  const midLon = (west + east) / 2;
+  const midLat = (south + north) / 2;
+  return [
+    [west, south],
+    [west, north],
+    [east, south],
+    [east, north],
+    [midLon, midLat],
+    [midLon, south],
+    [midLon, north],
+    [west, midLat],
+    [east, midLat],
+  ].map(([lon, lat]) => Cesium.Cartesian3.fromDegrees(lon, lat));
 }
 
 /**
@@ -120,9 +164,8 @@ export function createLantmaterietLineLayer({
   source,
   createPrimitives = createClassPrimitives,
   isSupported = (scene) =>
-    Cesium.GroundPolylinePrimitive.isSupported(scene) &&
-    (LANTMATERIET_DATASETS[dataset]?.geometry !== 'area' ||
-      Cesium.GroundPrimitive.isSupported(scene)),
+    LANTMATERIET_DATASETS[dataset]?.geometry !== 'area' ||
+    Cesium.GroundPrimitive.isSupported(scene),
 } = {}) {
   const meta = LANTMATERIET_LAYERS[dataset];
   const geometry = LANTMATERIET_DATASETS[dataset]?.geometry;
@@ -139,22 +182,42 @@ export function createLantmaterietLineLayer({
   let _lastError = null;
   /** @type {Array<{ className: string, style: object, primitives: object[], count: number, size: number }>} */
   let _classes = [];
+  /** @type {Cesium.Cartesian3[]} */
+  let _samples = [];
+
+  /** Whether any of the data is on the camera's side of the horizon. */
+  function facesCamera() {
+    const position = _viewer?.camera?.positionWC;
+    if (!position || !_samples.length) return true;
+    const occluder = new Cesium.EllipsoidalOccluder(
+      Cesium.Ellipsoid.WGS84,
+      position,
+    );
+    return _samples.some((point) => occluder.isPointVisible(point));
+  }
 
   function applyVisibility() {
     const height = _viewer?.camera?.positionCartographic?.height;
+    const facing = _enabled && facesCamera();
     for (const { style, primitives } of _classes) {
       const show =
-        _enabled &&
-        (!Number.isFinite(height) || lineClassVisible(style, height));
+        facing && (!Number.isFinite(height) || lineClassVisible(style, height));
       for (const primitive of primitives)
         if (primitive.show !== show) primitive.show = show;
     }
   }
 
+  /** Area fills drape in the ground pass; lines are ordinary primitives. */
+  function collectionFor(primitive) {
+    return primitive instanceof Cesium.GroundPrimitive
+      ? _viewer?.scene?.groundPrimitives
+      : _viewer?.scene?.primitives;
+  }
+
   function removePrimitives() {
     for (const { primitives } of _classes)
       for (const primitive of primitives)
-        _viewer?.scene?.groundPrimitives?.remove(primitive);
+        collectionFor(primitive)?.remove(primitive);
     _classes = [];
   }
 
@@ -165,6 +228,9 @@ export function createLantmaterietLineLayer({
       byClass[classIndex].push(
         geometry === 'area' ? coords.map(decodeLine) : decodeLine(coords),
       );
+    _samples = extentSamplePoints(
+      geometry === 'area' ? byClass.flat(2) : byClass.flat(),
+    );
     _classes = [];
     snapshot.classes.forEach((className, index) => {
       const style = styles[className];
@@ -172,7 +238,7 @@ export function createLantmaterietLineLayer({
       if (!style || !members.length) return;
       const primitives = createPrimitives(members, style, geometry);
       for (const primitive of primitives)
-        _viewer.scene.groundPrimitives.add(primitive);
+        collectionFor(primitive).add(primitive);
       // Lines are sized by length, areas by the ground they cover.
       const size = members.reduce(
         (sum, member) =>
@@ -225,7 +291,7 @@ export function createLantmaterietLineLayer({
       if (!_enabled || !_viewer) return false;
       if (_loaded) return true;
       if (!isSupported(_viewer.scene)) {
-        _lastError = 'Ground lines unsupported by this browser';
+        _lastError = 'Ground areas unsupported by this browser';
         return false;
       }
       _request?.abort();
@@ -258,6 +324,7 @@ export function createLantmaterietLineLayer({
       _removePreRender = null;
       if (viewer) _viewer = viewer;
       removePrimitives();
+      _samples = [];
       _viewer = null;
       _enabled = false;
       _loaded = null;
