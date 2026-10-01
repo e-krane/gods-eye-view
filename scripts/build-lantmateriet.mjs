@@ -15,7 +15,7 @@
  *
  * Download mode reads LANTMATERIET_USERNAME and LANTMATERIET_PASSWORD (a
  * Geotorget account, Basic auth) and the order id from --order or
- * LANTMATERIET_ORDER_ID: the id on the order row in Geotorget, Mitt konto →
+ * LANTMATERIET_TOPT_250_ORDER_ID: the id on the order row in Geotorget, Mitt konto →
  * Ärenden. It downloads the order's latest delivery into .gev-cache/.
  * --new-delivery first asks for a fresh delivery (subscription orders only)
  * and waits for it. Requires Node 24 (node:sqlite).
@@ -45,7 +45,7 @@ const CACHE_DIR = path.join(ROOT, '.gev-cache', 'lantmateriet');
 const API = 'https://api.lantmateriet.se/geotorget/nedladdning/v1';
 
 function parseArgs(argv) {
-  const args = { order: process.env.LANTMATERIET_ORDER_ID || null };
+  const args = { order: process.env.LANTMATERIET_TOPT_250_ORDER_ID || null };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--from') args.from = argv[++i];
     else if (argv[i] === '--order') args.order = argv[++i];
@@ -100,7 +100,7 @@ async function listFiles(
 async function download(order, args) {
   if (!args.order)
     throw new Error(
-      'Pass --order <OrderID> or set LANTMATERIET_ORDER_ID (Geotorget, Mitt konto → Ärenden)',
+      'Pass --order <OrderID> or set LANTMATERIET_TOPT_250_ORDER_ID (Geotorget, Mitt konto → Ärenden)',
     );
   const info = await api(`/${order}`);
   console.log(

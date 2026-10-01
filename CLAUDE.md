@@ -29,7 +29,7 @@ See "Adding a data layer" below for the registration pattern.
 - Lantmäteriet static map layers (done: `src/layers/lantmateriet/`, the reference for bundled static lines):
   Swedish power lines, railways and main roads from the open *Topografi 250 Nedladdning, vektor* (CC0).
   `scripts/build-lantmateriet.mjs` downloads a Geotorget order through `api.lantmateriet.se` (Basic auth with
-  `LANTMATERIET_USERNAME`/`LANTMATERIET_PASSWORD`, order id from `--order` or `LANTMATERIET_ORDER_ID`; the API
+  `LANTMATERIET_USERNAME`/`LANTMATERIET_PASSWORD`, order id from `--order` or `LANTMATERIET_TOPT_250_ORDER_ID`; the API
   cannot list orders) or reads local files with `--from`, reads the GeoPackages with `node:sqlite`, merges,
   simplifies, converts SWEREF 99 TM to WGS84 and writes delta-encoded JSON to
   `src/data/local_data/lantmateriet_topografi250/`. Each class is one `GroundPolylinePrimitive` in
