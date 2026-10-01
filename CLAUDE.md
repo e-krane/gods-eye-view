@@ -32,11 +32,12 @@ See "Adding a data layer" below for the registration pattern.
   `LANTMATERIET_USERNAME`/`LANTMATERIET_PASSWORD`, order id from `--order` or `LANTMATERIET_TOPT_250_ORDER_ID`; the API
   cannot list orders) or reads local files with `--from`, reads the GeoPackages with `node:sqlite`, merges,
   simplifies, converts SWEREF 99 TM to WGS84 and writes delta-encoded JSON to
-  `src/data/local_data/lantmateriet_topografi250/`. Each class is one `GroundPolylinePrimitive` in
-  `scene.groundPrimitives`, not entities (area classes add a `GroundPrimitive` fill). A rebuild from only some theme
+  `src/data/local_data/lantmateriet_topografi250/`. Each class is one batched polyline `Primitive` (not entities,
+  not ground-clamped: plain polylines get MSAA anti-aliasing) with a depth-fail appearance so terrain cannot hide it,
+  hidden while the data is behind the horizon; area classes add a `GroundPrimitive` fill. A rebuild from only some theme
   files keeps the other datasets. Rebuild when Lantmäteriet updates (power lines every two years). Next: hillshade from
   Markhöjdmodell (STAC `api.lantmateriet.se/stac-hojd/v1`, COGs on `dl1.lantmateriet.se`, CC BY 4.0); downloads
-  need the account to have ordered Markhöjdmodell Nedladdning on Geotorget (until then `dl1` answers 403)
+  use Basic auth with the Geotorget login, which works once the account has ordered Markhöjdmodell Nedladdning (done)
 
 ## Conventions
 

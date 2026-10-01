@@ -1,5 +1,9 @@
 # Changelog
 
+- The Lantmäteriet line layers draw smoother: lines are now plain polylines,
+  which MSAA anti-aliases, instead of ground-clamped ones, and the thinnest
+  classes are wider. A depth-fail appearance keeps them visible over terrain,
+  and they hide while Sweden is behind the horizon.
 - Military Areas (SE) (Infrastructure group, share-link token `z9`) shows
   Lantmäteriet's 120 military training areas and firing ranges as translucent
   amber and red areas with outlines, from the same Topografi 250 delivery. The

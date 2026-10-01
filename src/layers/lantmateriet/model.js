@@ -44,7 +44,7 @@ export const LANTMATERIET_LINE_STYLES = Object.freeze({
     region: Object.freeze({
       label: 'Regional (25–200 kV)',
       color: '#ffd180',
-      width: 1.5,
+      width: 2,
       maxHeightM: 1_500_000,
     }),
   }),
@@ -81,7 +81,7 @@ export const LANTMATERIET_LINE_STYLES = Object.freeze({
     landsvag: Object.freeze({
       label: 'Main road',
       color: '#eceff1',
-      width: 1.25,
+      width: 1.75,
       maxHeightM: 600_000,
     }),
   }),

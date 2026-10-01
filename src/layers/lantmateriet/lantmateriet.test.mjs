@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import * as Cesium from 'cesium';
 import {
   decodeLine,
   encodeLine,
@@ -353,7 +354,7 @@ function harness(source, { supported = true, dataset = 'power' } = {}) {
   const viewer = {
     camera: { positionCartographic: { height: 2_000_000 } },
     scene: {
-      groundPrimitives: {
+      primitives: {
         add(value) {
           added.push(value);
           return value;
@@ -635,4 +636,22 @@ test('area layer draws a fill and an outline per class with counts and km²', as
   assert.ok(h.added.every((p) => p.show === false));
   h.layer.destroy(h.viewer);
   assert.equal(h.added.length, 0);
+});
+
+test('lines hide while their data is behind the horizon', async () => {
+  const h = harness({ getSnapshot: async () => powerDataset() });
+  h.layer.enable(h.viewer);
+  await h.layer.update(h.viewer);
+  const [stam] = h.added;
+  const look = (lon, lat) => {
+    h.viewer.camera.positionWC = Cesium.Cartesian3.fromDegrees(lon, lat, 2e6);
+    h.preRender.forEach((fn) => fn());
+  };
+  look(15, 60);
+  assert.equal(stam.show, true, 'over Sweden');
+  look(-165, -60);
+  assert.equal(stam.show, false, 'from the far side of the globe');
+  look(15, 30);
+  assert.equal(stam.show, true, 'from the Sahara, Sweden is still in view');
+  h.layer.destroy(h.viewer);
 });
