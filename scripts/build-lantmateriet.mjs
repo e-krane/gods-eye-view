@@ -144,6 +144,17 @@ async function download(order, args) {
   return { dir, producedAt: delivery.skapad.slice(0, 10) };
 }
 
+/** Delivery dates of extracted GeoPackages, from their zip entries. */
+const zipDates = new Map();
+
+/** `YYYY-MM-DD` from a zip entry's DOS date field. */
+function dosDate(value) {
+  const year = 1980 + (value >> 9);
+  const month = String((value >> 5) & 0x0f).padStart(2, '0');
+  const day = String(value & 0x1f).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 /** Extract the .gpkg members of a zip archive (stored or deflated). */
 function extractGpkgs(zipPath, dir) {
   const zip = fs.readFileSync(zipPath);
@@ -155,6 +166,7 @@ function extractGpkgs(zipPath, dir) {
   const extracted = [];
   for (let i = 0; i < count; i++) {
     const method = zip.readUInt16LE(offset + 10);
+    const date = dosDate(zip.readUInt16LE(offset + 14));
     const compressedSize = zip.readUInt32LE(offset + 20);
     const nameLength = zip.readUInt16LE(offset + 28);
     const extraLength = zip.readUInt16LE(offset + 30);
@@ -174,6 +186,7 @@ function extractGpkgs(zipPath, dir) {
       throw new Error(`${name} uses unsupported zip method ${method}`);
     const target = path.join(dir, path.basename(name));
     fs.writeFileSync(target, bytes);
+    zipDates.set(target, date);
     extracted.push(target);
   }
   return extracted;
@@ -234,7 +247,11 @@ function readRows(gpkgs, datasetId) {
       console.log(
         `${datasetId}: ${rows.length} rows from ${path.basename(file)} ${column.table_name}`,
       );
-      return { rows, latest: latest.slice(0, 10) };
+      // Local files: the zip's delivery date, else the newest edit.
+      return {
+        rows,
+        asOf: zipDates.get(file) || latest.slice(0, 10),
+      };
     } finally {
       db.close();
     }
@@ -258,9 +275,9 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
   const files = [];
   for (const datasetId of Object.keys(LANTMATERIET_DATASETS)) {
-    const { rows, latest } = readRows(gpkgs, datasetId);
+    const { rows, asOf } = readRows(gpkgs, datasetId);
     const built = buildStaticLineDataset(datasetId, rows, {
-      producedAt: producedAt || latest,
+      producedAt: producedAt || asOf,
     });
     const text = `${JSON.stringify(built)}\n`;
     const name = `${datasetId}.json`;

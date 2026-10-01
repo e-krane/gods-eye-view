@@ -1,0 +1,37 @@
+{
+  "id": "lantmateriet-topografi250",
+  "name": "Lantmäteriet Topografi 250 Nedladdning, vektor",
+  "category": "infrastructure",
+  "description": "Swedish power lines, railways and main roads, simplified for the globe.",
+  "built_at": "2026-10-01",
+  "license_note": "CC0 1.0. Attribution: © Lantmäteriet.",
+  "files": [
+    {
+      "path": "power.json",
+      "dataset": "power",
+      "table": "ledningslinje",
+      "produced_at": "2026-09-28",
+      "line_count": 3016,
+      "point_count": 22881,
+      "sha256": "e75ee104d31ac8ece6b09fc0aa545dd3491bbb3fd3773f3288c9241653e550d9"
+    },
+    {
+      "path": "rail.json",
+      "dataset": "rail",
+      "table": "ralstrafik",
+      "produced_at": "2026-09-28",
+      "line_count": 723,
+      "point_count": 23479,
+      "sha256": "f12431ae701a3a27e3f61b30a2377af78bef99382550f71cd42805dbfa6b3d93"
+    },
+    {
+      "path": "roads.json",
+      "dataset": "roads",
+      "table": "vaglinje",
+      "produced_at": "2026-09-28",
+      "line_count": 1352,
+      "point_count": 49467,
+      "sha256": "02270b56b34e18008f9bd97b84946cc884c6d7c59d1d12825e9e0b7535160740"
+    }
+  ]
+}
