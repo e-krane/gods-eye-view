@@ -26,6 +26,14 @@ See "Adding a data layer" below for the registration pattern.
 - GDELT: broader event aggregation for sabotage/hybrid incidents across Europe
 - Baltic seabed incidents (done: `src/layers/seabed/`, a curated bundled dataset in `incidents.js`; review each
   incident's `status` and `statusAsOf` as investigations conclude, and bump `SEABED_DATASET_AS_OF`)
+- Lantmäteriet static map layers (done: `src/layers/lantmateriet/`, the reference for bundled static lines):
+  Swedish power lines, railways and main roads from the open *Topografi 250 Nedladdning, vektor* (CC0).
+  `scripts/build-lantmateriet.mjs` downloads a Geotorget order through `api.lantmateriet.se` (Basic auth with
+  `LANTMATERIET_USERNAME`/`LANTMATERIET_PASSWORD`, order id from `--order` or `LANTMATERIET_TOPT_250_ORDER_ID`; the API
+  cannot list orders) or reads local files with `--from`, reads the GeoPackages with `node:sqlite`, merges,
+  simplifies, converts SWEREF 99 TM to WGS84 and writes delta-encoded JSON to
+  `src/data/local_data/lantmateriet_topografi250/`. Each class is one `GroundPolylinePrimitive` in
+  `scene.groundPrimitives`, not entities. Rebuild when Lantmäteriet updates (power lines every two years)
 
 ## Conventions
 
@@ -44,6 +52,8 @@ See "Adding a data layer" below for the registration pattern.
 - Checks: `npm test`, `npm run format:check`, `npm run check:boundaries`,
   `npm run layer-token:check -- --base-ref origin/main`, `npm run build`.
   `npm run test:track` and `scripts/qa-*.mjs` gates need a running dev server.
+- Headless Chromium screenshots: launch with `--disable-accelerated-2d-canvas`. Under SwiftShader the
+  accelerated world-overlay canvas can keep labels from a previous view after the overlay has cleared it.
 
 ## Adding a data layer
 

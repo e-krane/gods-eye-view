@@ -893,6 +893,17 @@
     ],
     "external": ["cesium"]
   },
+  "lantmateriet": {
+    "exports": ["./layers/lantmateriet"],
+    "modules": [
+      "src/layers/lantmateriet/index.js",
+      "src/layers/lantmateriet/geometry.js",
+      "src/layers/lantmateriet/model.js",
+      "src/layers/lantmateriet/source.js",
+      "src/layers/lantmateriet/records.js"
+    ],
+    "external": ["cesium"]
+  },
   "seabed": {
     "exports": ["./layers/seabed"],
     "modules": [
@@ -2129,7 +2140,13 @@
       "src/layers/trains/source.js",
       "src/layers/trains/model.js",
       "src/layers/trains/index.js",
-      "src/app/layers/trainPositions.js"
+      "src/app/layers/trainPositions.js",
+      "src/layers/lantmateriet/geometry.js",
+      "src/layers/lantmateriet/records.js",
+      "src/layers/lantmateriet/source.js",
+      "src/layers/lantmateriet/model.js",
+      "src/layers/lantmateriet/index.js",
+      "src/app/layers/lantmaterietLines.js"
     ],
     "external": [
       "hls.js",
@@ -2644,7 +2661,13 @@
       "src/layers/trains/source.js",
       "src/layers/trains/model.js",
       "src/layers/trains/index.js",
-      "src/app/layers/trainPositions.js"
+      "src/app/layers/trainPositions.js",
+      "src/layers/lantmateriet/geometry.js",
+      "src/layers/lantmateriet/records.js",
+      "src/layers/lantmateriet/source.js",
+      "src/layers/lantmateriet/model.js",
+      "src/layers/lantmateriet/index.js",
+      "src/app/layers/lantmaterietLines.js"
     ],
     "external": [
       "hls.js",
@@ -2925,6 +2948,15 @@
       "src/layers/trains/source.js",
       "src/sources/httpBody.js",
       "src/sources/requestDeadline.js"
+    ],
+    "external": []
+  },
+  "lantmateriet-source": {
+    "exports": ["./layers/lantmateriet/source"],
+    "modules": [
+      "src/layers/lantmateriet/records.js",
+      "src/layers/lantmateriet/source.js",
+      "src/layers/lantmateriet/geometry.js"
     ],
     "external": []
   },

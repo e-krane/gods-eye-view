@@ -1,5 +1,15 @@
 # Changelog
 
+- Power Lines (SE), Railways (SE) and Main Roads (SE) (Infrastructure group,
+  share-link tokens `z6`, `z7`, `z8`) draw Lantmäteriet's open Topografi 250
+  data for all of Sweden: the main grid and regional power lines, the rail
+  network (dashed, heritage lines apart) and motorways, expressways, divided
+  roads and main roads. The data is bundled, so the layers work offline;
+  `scripts/build-lantmateriet.mjs` rebuilds it from a Geotorget order. Each
+  class is one ground-clamped primitive, and minor classes appear only as the
+  camera comes down. The layer rows show a legend with each class's length:
+  12,461 km of main grid and 25,954 km of regional lines, 11,821 km of railway,
+  2,165 km of motorway. The three datasets (delivered 2026-09-28) total 950 KB.
 - Trains (SE) (Movement group, share-link token `z5`) shows the live position
   of every Swedish train that reported to Trafikverket in the last five
   minutes, about 300 at a time, with `Train 537 · 180 km/h` labels. It uses the

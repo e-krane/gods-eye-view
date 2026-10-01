@@ -157,6 +157,13 @@ export const DATA_CREDITS = [
       '<a href="https://data.trafikverket.se/" target="_blank" rel="noopener">Trafikverket</a> (CC0)',
   },
   {
+    key: 'lantmateriet',
+    html:
+      'Swedish power lines, railways and main roads: © ' +
+      '<a href="https://www.lantmateriet.se/" target="_blank" rel="noopener">Lantmäteriet</a> ' +
+      'Topografi 250 (CC0)',
+  },
+  {
     key: 'baltic-seabed-incidents',
     html: 'Baltic seabed incidents: curated from the news and official sources cited on each incident card',
   },

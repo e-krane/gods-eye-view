@@ -18,6 +18,8 @@
   "src/layers/frontline/frontline.test.mjs",
   "src/layers/seabed/seabed.test.mjs",
   "src/layers/trains/trains.test.mjs",
+  "src/layers/lantmateriet/lantmateriet.test.mjs",
+  "scripts/build-lantmateriet.mjs",
   "scripts/check-package-boundaries.mjs",
   "scripts/precompute-cctv-heights.mjs",
   "src/tooling/precomputeCctvHeights.test.mjs",
