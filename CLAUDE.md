@@ -26,14 +26,17 @@ See "Adding a data layer" below for the registration pattern.
 - GDELT: broader event aggregation for sabotage/hybrid incidents across Europe
 - Baltic seabed incidents (done: `src/layers/seabed/`, a curated bundled dataset in `incidents.js`; review each
   incident's `status` and `statusAsOf` as investigations conclude, and bump `SEABED_DATASET_AS_OF`)
-- Lantmäteriet static map layers (done: `src/layers/lantmateriet/`, the reference for bundled static lines):
-  Swedish power lines, railways and main roads from the open *Topografi 250 Nedladdning, vektor* (CC0).
+- Lantmäteriet static map layers (done: `src/layers/lantmateriet/`, the reference for bundled static lines and areas):
+  Swedish power lines, railways, main roads and military areas from the open *Topografi 250 Nedladdning, vektor* (CC0).
   `scripts/build-lantmateriet.mjs` downloads a Geotorget order through `api.lantmateriet.se` (Basic auth with
   `LANTMATERIET_USERNAME`/`LANTMATERIET_PASSWORD`, order id from `--order` or `LANTMATERIET_TOPT_250_ORDER_ID`; the API
   cannot list orders) or reads local files with `--from`, reads the GeoPackages with `node:sqlite`, merges,
   simplifies, converts SWEREF 99 TM to WGS84 and writes delta-encoded JSON to
   `src/data/local_data/lantmateriet_topografi250/`. Each class is one `GroundPolylinePrimitive` in
-  `scene.groundPrimitives`, not entities. Rebuild when Lantmäteriet updates (power lines every two years)
+  `scene.groundPrimitives`, not entities (area classes add a `GroundPrimitive` fill). A rebuild from only some theme
+  files keeps the other datasets. Rebuild when Lantmäteriet updates (power lines every two years). Next: hillshade from
+  Markhöjdmodell (STAC `api.lantmateriet.se/stac-hojd/v1`, COGs on `dl1.lantmateriet.se`, CC BY 4.0); downloads
+  need the account to have ordered Markhöjdmodell Nedladdning on Geotorget (until then `dl1` answers 403)
 
 ## Conventions
 

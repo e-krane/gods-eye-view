@@ -69,6 +69,7 @@ const SOURCE_METHODS = Object.freeze({
   'lantmateriet-power-lines': ['getSnapshot'],
   'lantmateriet-railways': ['getSnapshot'],
   'lantmateriet-roads': ['getSnapshot'],
+  'lantmateriet-military-areas': ['getSnapshot'],
   'fire-perimeters': ['getSnapshot'],
   cables: ['fetch'],
 });
@@ -227,6 +228,10 @@ export function createApplicationCatalog({
         createApplicationLantmaterietLines({
           dataset: 'roads',
           source: sources['lantmateriet-roads'],
+        }),
+        createApplicationLantmaterietLines({
+          dataset: 'military',
+          source: sources['lantmateriet-military-areas'],
         }),
         ...createInfrastructureLayers(localGeoJsonServices),
         createApplicationCables({ source: sources.cables }),

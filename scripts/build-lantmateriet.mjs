@@ -27,9 +27,13 @@ import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
-import { parseGpkgLines } from '../src/layers/lantmateriet/geometry.js';
+import {
+  parseGpkgLines,
+  parseGpkgPolygons,
+} from '../src/layers/lantmateriet/geometry.js';
 import {
   LANTMATERIET_DATASETS,
+  buildStaticAreaDataset,
   buildStaticLineDataset,
 } from '../src/layers/lantmateriet/records.js';
 
@@ -128,7 +132,9 @@ async function download(order, args) {
     [...themes].some((theme) => file.title.toLowerCase().startsWith(theme)),
   );
   if (!wanted.length)
-    throw new Error('The delivery has no ledningar or kommunikation files');
+    throw new Error(
+      `The delivery has none of the theme files (${[...themes].join(', ')})`,
+    );
   const dir = path.join(CACHE_DIR, delivery.objektidentitet || 'latest');
   fs.mkdirSync(dir, { recursive: true });
   for (const file of wanted) {
@@ -210,7 +216,10 @@ function findGpkgs(dir) {
   return [...new Set(found)];
 }
 
-/** Read one dataset's rows from whichever GeoPackage holds its table. */
+/**
+ * Read one dataset's rows from whichever GeoPackage holds its table, or
+ * return null when no file for its theme was supplied.
+ */
 function readRows(gpkgs, datasetId) {
   const dataset = LANTMATERIET_DATASETS[datasetId];
   for (const file of gpkgs) {
@@ -241,7 +250,9 @@ function readRows(gpkgs, datasetId) {
         rows.push({
           objekttypnr: Number(row.objekttypnr),
           label: row.label,
-          lines: parseGpkgLines(row.geom),
+          ...(dataset.geometry === 'area'
+            ? { polygons: parseGpkgPolygons(row.geom) }
+            : { lines: parseGpkgLines(row.geom) }),
         });
       }
       console.log(
@@ -256,9 +267,15 @@ function readRows(gpkgs, datasetId) {
       db.close();
     }
   }
-  throw new Error(
-    `No ${dataset.theme} GeoPackage with a ${dataset.table} table`,
-  );
+  if (
+    gpkgs.some((file) =>
+      path.basename(file).toLowerCase().startsWith(dataset.theme),
+    )
+  )
+    throw new Error(
+      `The ${dataset.theme} GeoPackage has no ${dataset.table} table`,
+    );
+  return null;
 }
 
 function sha256(buffer) {
@@ -273,43 +290,68 @@ async function main() {
   const gpkgs = findGpkgs(dir);
   const outDir = args.out ? path.resolve(args.out) : OUT_DIR;
   fs.mkdirSync(outDir, { recursive: true });
+  // Datasets whose theme was not supplied keep their previous build.
+  const sourcePath = path.join(outDir, 'source.json');
+  const previous = fs.existsSync(sourcePath)
+    ? JSON.parse(fs.readFileSync(sourcePath, 'utf8')).files || []
+    : [];
   const files = [];
   for (const datasetId of Object.keys(LANTMATERIET_DATASETS)) {
-    const { rows, asOf } = readRows(gpkgs, datasetId);
-    const built = buildStaticLineDataset(datasetId, rows, {
-      producedAt: producedAt || asOf,
+    const dataset = LANTMATERIET_DATASETS[datasetId];
+    const read = readRows(gpkgs, datasetId);
+    if (!read) {
+      const kept = previous.find((file) => file.dataset === datasetId);
+      if (kept) files.push(kept);
+      console.log(
+        `${datasetId}: no ${dataset.theme} file, keeping the previous build`,
+      );
+      continue;
+    }
+    const build =
+      dataset.geometry === 'area'
+        ? buildStaticAreaDataset
+        : buildStaticLineDataset;
+    const built = build(datasetId, read.rows, {
+      producedAt: producedAt || read.asOf,
     });
     const text = `${JSON.stringify(built)}\n`;
     const name = `${datasetId}.json`;
     fs.writeFileSync(path.join(outDir, name), text);
-    const points = built.lines.reduce((sum, [, , c]) => sum + c.length / 2, 0);
+    const items = built.lines ?? built.areas;
+    const points = items.reduce(
+      (sum, [, , coords]) =>
+        sum +
+        (dataset.geometry === 'area'
+          ? coords.reduce((n, ring) => n + ring.length / 2, 0)
+          : coords.length / 2),
+      0,
+    );
+    const noun = dataset.geometry === 'area' ? 'areas' : 'lines';
     console.log(
-      `${name}: ${built.lines.length} lines, ${points} points, ${(text.length / 1024).toFixed(0)} KB`,
+      `${name}: ${items.length} ${noun}, ${points} points, ${(text.length / 1024).toFixed(0)} KB`,
     );
     files.push({
       path: name,
       dataset: datasetId,
-      table: LANTMATERIET_DATASETS[datasetId].table,
+      table: dataset.table,
       produced_at: built.producedAt,
-      line_count: built.lines.length,
+      [`${noun.slice(0, -1)}_count`]: items.length,
       point_count: points,
       sha256: sha256(text),
     });
   }
+  if (!files.length) throw new Error('No Lantmäteriet theme files found');
   const source = {
     id: 'lantmateriet-topografi250',
     name: 'Lantmäteriet Topografi 250 Nedladdning, vektor',
     category: 'infrastructure',
     description:
-      'Swedish power lines, railways and main roads, simplified for the globe.',
+      'Swedish power lines, railways, main roads and military areas, simplified for the globe.',
     built_at: new Date().toISOString().slice(0, 10),
     license_note: 'CC0 1.0. Attribution: © Lantmäteriet.',
     files,
   };
-  fs.writeFileSync(
-    path.join(outDir, 'source.json'),
-    `${JSON.stringify(source, null, 2)}\n`,
-  );
+  fs.writeFileSync(sourcePath, `${JSON.stringify(source, null, 2)}\n`);
 }
 
 main().catch((error) => {

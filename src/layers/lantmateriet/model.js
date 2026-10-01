@@ -1,6 +1,6 @@
 /**
- * Layer identities and line styles for the Lantmäteriet static datasets.
- * Widths are screen pixels. `maxHeightM` hides a class when the camera is
+ * Layer identities and styles for the Lantmäteriet static datasets. Widths
+ * are screen pixels; `fillAlpha` gives an area class its translucent fill. `maxHeightM` hides a class when the camera is
  * higher than that, so dense minor classes do not smear the national view.
  */
 export const LANTMATERIET_LAYERS = Object.freeze({
@@ -24,6 +24,13 @@ export const LANTMATERIET_LAYERS = Object.freeze({
     icon: '🛣️',
     blurb:
       'State roads from Trafikverket’s road database, as classed by Lantmäteriet. Main roads appear as you zoom in.',
+  }),
+  military: Object.freeze({
+    id: 'lantmateriet-military-areas',
+    name: 'Military Areas (SE)',
+    icon: '🎯',
+    blurb:
+      'Military training areas and firing ranges from Lantmäteriet’s map data. Firing ranges may be closed to the public when firing is announced.',
   }),
 });
 
@@ -76,6 +83,20 @@ export const LANTMATERIET_LINE_STYLES = Object.freeze({
       color: '#eceff1',
       width: 1.25,
       maxHeightM: 600_000,
+    }),
+  }),
+  military: Object.freeze({
+    skjutfalt: Object.freeze({
+      label: 'Firing range',
+      color: '#ef5350',
+      width: 2,
+      fillAlpha: 0.22,
+    }),
+    ovningsfalt: Object.freeze({
+      label: 'Training area',
+      color: '#ffb300',
+      width: 2,
+      fillAlpha: 0.16,
     }),
   }),
 });

@@ -61,5 +61,8 @@ export function createStandaloneLayerSources() {
     }),
     'lantmateriet-railways': createLantmaterietLineSource({ dataset: 'rail' }),
     'lantmateriet-roads': createLantmaterietLineSource({ dataset: 'roads' }),
+    'lantmateriet-military-areas': createLantmaterietLineSource({
+      dataset: 'military',
+    }),
   };
 }

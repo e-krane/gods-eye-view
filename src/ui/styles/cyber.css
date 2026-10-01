@@ -648,6 +648,11 @@
   content: '╫';
 }
 :root[data-ui-theme='cyber']
+  .data-toggle-row[data-layer-id='lantmateriet-military-areas']
+  .data-icon::before {
+  content: '▨';
+}
+:root[data-ui-theme='cyber']
   .data-toggle-row[data-layer-id='lantmateriet-roads']
   .data-icon::before {
   content: '═';

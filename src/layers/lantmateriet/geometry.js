@@ -94,6 +94,23 @@ export function wgs84ToSweref99tm(lon, lat) {
 
 const ENVELOPE_BYTES = [0, 32, 48, 48, 64];
 
+function readGpkg(blob) {
+  const out = { lines: [], polygons: [] };
+  if (!(blob instanceof Uint8Array) || blob.length < 8) return out;
+  if (blob[0] !== 0x47 || blob[1] !== 0x50) return out; // "GP"
+  const flags = blob[3];
+  if (flags & 0x10) return out; // empty geometry
+  const envelope = ENVELOPE_BYTES[(flags >> 1) & 0x07];
+  if (envelope === undefined) return out;
+  const view = new DataView(blob.buffer, blob.byteOffset, blob.byteLength);
+  try {
+    readWkb(view, 8 + envelope, out);
+  } catch {
+    return { lines: [], polygons: [] };
+  }
+  return out;
+}
+
 /**
  * Lines from one GeoPackage geometry blob (a GPKG header followed by WKB).
  * LineStrings and MultiLineStrings are read, in 2D, 3D, M or ZM, ISO or EWKB
@@ -102,20 +119,32 @@ const ENVELOPE_BYTES = [0, 32, 48, 48, 64];
  * @returns {Array<Array<[number, number]>>}
  */
 export function parseGpkgLines(blob) {
-  if (!(blob instanceof Uint8Array) || blob.length < 8) return [];
-  if (blob[0] !== 0x47 || blob[1] !== 0x50) return []; // "GP"
-  const flags = blob[3];
-  if (flags & 0x10) return []; // empty geometry
-  const envelope = ENVELOPE_BYTES[(flags >> 1) & 0x07];
-  if (envelope === undefined) return [];
-  const view = new DataView(blob.buffer, blob.byteOffset, blob.byteLength);
-  const lines = [];
-  try {
-    readWkb(view, 8 + envelope, lines);
-  } catch {
-    return [];
+  return readGpkg(blob).lines;
+}
+
+/**
+ * Polygons from one GeoPackage geometry blob: each polygon is its outer ring
+ * followed by any holes. Polygons and MultiPolygons are read; any other
+ * geometry yields none.
+ * @param {Uint8Array} blob
+ * @returns {Array<Array<Array<[number, number]>>>}
+ */
+export function parseGpkgPolygons(blob) {
+  return readGpkg(blob).polygons;
+}
+
+function readPoints(view, offset, little, dims) {
+  const count = view.getUint32(offset, little);
+  offset += 4;
+  const points = new Array(count);
+  for (let i = 0; i < count; i++) {
+    points[i] = [
+      view.getFloat64(offset, little),
+      view.getFloat64(offset + 8, little),
+    ];
+    offset += 8 * dims;
   }
-  return lines;
+  return [points, offset];
 }
 
 function readWkb(view, offset, out) {
@@ -133,20 +162,23 @@ function readWkb(view, offset, out) {
   type %= 1000;
   offset += 5;
   if (type === 2) {
-    const count = view.getUint32(offset, little);
+    const [line, next] = readPoints(view, offset, little, dims);
+    if (line.length >= 2) out.lines.push(line);
+    return next;
+  }
+  if (type === 3) {
+    const ringCount = view.getUint32(offset, little);
     offset += 4;
-    const line = new Array(count);
-    for (let i = 0; i < count; i++) {
-      line[i] = [
-        view.getFloat64(offset, little),
-        view.getFloat64(offset + 8, little),
-      ];
-      offset += 8 * dims;
+    const rings = [];
+    for (let i = 0; i < ringCount; i++) {
+      const [ring, next] = readPoints(view, offset, little, dims);
+      offset = next;
+      if (ring.length >= 4) rings.push(ring);
     }
-    if (count >= 2) out.push(line);
+    if (rings.length) out.polygons.push(rings);
     return offset;
   }
-  if (type === 5) {
+  if (type === 5 || type === 6) {
     const parts = view.getUint32(offset, little);
     offset += 4;
     for (let i = 0; i < parts; i++) offset = readWkb(view, offset, out);
@@ -314,6 +346,32 @@ export function lineLengthKm(flat) {
     km += 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)));
   }
   return km;
+}
+
+/**
+ * Area in km² of a polygon given as flat `[lon, lat, …]` degree rings (the
+ * outer ring first, then holes). Uses a local equirectangular projection,
+ * accurate to well under a percent for areas the size of a firing range.
+ * @param {number[][]} rings
+ */
+export function polygonAreaKm2(rings) {
+  let total = 0;
+  rings.forEach((flat, index) => {
+    if (flat.length < 6) return;
+    const kmPerLon =
+      ((Math.PI * EARTH_RADIUS_KM) / 180) * Math.cos(flat[1] * DEG);
+    const kmPerLat = (Math.PI * EARTH_RADIUS_KM) / 180;
+    let twice = 0;
+    for (let i = 0; i < flat.length; i += 2) {
+      const j = (i + 2) % flat.length;
+      twice +=
+        flat[i] * kmPerLon * (flat[j + 1] * kmPerLat) -
+        flat[j] * kmPerLon * (flat[i + 1] * kmPerLat);
+    }
+    const area = Math.abs(twice) / 2;
+    total += index === 0 ? area : -area;
+  });
+  return Math.max(0, total);
 }
 
 /**
