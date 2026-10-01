@@ -1,5 +1,14 @@
 # Changelog
 
+- Terrain Relief (SE) (Infrastructure group, share-link token `za`) drapes a
+  hillshade made from Lantmäteriet's 1 m laser-scanned ground model over six
+  test sites: Revingehed, Skillingaryd, Tofta (Gotland), Vidsel airbase,
+  Hemavan and Mierkenis (Merkenes). It appears as you zoom in on a site, on
+  both globe maps and the photoreal map; the layer row has a chip per site
+  that flies there. Lowland sites exaggerate heights 3× so low ridges,
+  ditches and earthworks show under forest. The 25.7 MB of 4-bit palette
+  tiles are built by `scripts/build-lantmateriet-hillshade.mjs`, which reads
+  only the needed overview of each elevation file with range requests.
 - The Lantmäteriet line layers draw smoother: lines are now plain polylines,
   which MSAA anti-aliases, instead of ground-clamped ones, and the thinnest
   classes are wider. A depth-fail appearance keeps them visible over terrain,

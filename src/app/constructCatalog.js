@@ -30,6 +30,7 @@ import { createApplicationFrontline } from './layers/frontline.js';
 import { createApplicationSeabedIncidents } from './layers/seabedIncidents.js';
 import { createApplicationTrainPositions } from './layers/trainPositions.js';
 import { createApplicationLantmaterietLines } from './layers/lantmaterietLines.js';
+import { createApplicationLantmaterietRelief } from './layers/lantmaterietRelief.js';
 import { createApplicationFirePerimeters } from './layers/perimeters.js';
 import { createApplicationCables } from './layers/submarineCables.js';
 import { createInfrastructureLayers } from '../data/infrastructure.js';
@@ -70,6 +71,7 @@ const SOURCE_METHODS = Object.freeze({
   'lantmateriet-railways': ['getSnapshot'],
   'lantmateriet-roads': ['getSnapshot'],
   'lantmateriet-military-areas': ['getSnapshot'],
+  'lantmateriet-relief': ['getSnapshot'],
   'fire-perimeters': ['getSnapshot'],
   cables: ['fetch'],
 });
@@ -232,6 +234,9 @@ export function createApplicationCatalog({
         createApplicationLantmaterietLines({
           dataset: 'military',
           source: sources['lantmateriet-military-areas'],
+        }),
+        createApplicationLantmaterietRelief({
+          source: sources['lantmateriet-relief'],
         }),
         ...createInfrastructureLayers(localGeoJsonServices),
         createApplicationCables({ source: sources.cables }),

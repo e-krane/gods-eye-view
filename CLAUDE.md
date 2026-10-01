@@ -35,9 +35,12 @@ See "Adding a data layer" below for the registration pattern.
   `src/data/local_data/lantmateriet_topografi250/`. Each class is one batched polyline `Primitive` (not entities,
   not ground-clamped: plain polylines get MSAA anti-aliasing) with a depth-fail appearance so terrain cannot hide it,
   hidden while the data is behind the horizon; area classes add a `GroundPrimitive` fill. A rebuild from only some theme
-  files keeps the other datasets. Rebuild when Lantmäteriet updates (power lines every two years). Next: hillshade from
-  Markhöjdmodell (STAC `api.lantmateriet.se/stac-hojd/v1`, COGs on `dl1.lantmateriet.se`, CC BY 4.0); downloads
-  use Basic auth with the Geotorget login, which works once the account has ordered Markhöjdmodell Nedladdning (done)
+  files keeps the other datasets. Rebuild when Lantmäteriet updates (power lines every two years).
+  Terrain relief (done: `src/layers/lantmateriet/reliefLayer.js` + `relief.js`): hillshade tiles for the sites in
+  `RELIEF_SITES`, built by `scripts/build-lantmateriet-hillshade.mjs` from Markhöjdmodell (STAC
+  `api.lantmateriet.se/stac-hojd/v1`, COGs on `dl1.lantmateriet.se`, CC BY 4.0, Basic auth with the Geotorget login;
+  the account has ordered Markhöjdmodell Nedladdning). Add a site to `RELIEF_SITES` and run with `--site <id>`;
+  mosaics cache in `.gev-cache/`. Tiles are 4-bit palette PNGs in `public/lantmateriet-hillshade/` (~2–7 MB a site)
 
 ## Conventions
 

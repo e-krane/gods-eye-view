@@ -6,7 +6,19 @@ import {
   lineClassVisible,
 } from './model.js';
 export * from './model.js';
-export { createLantmaterietLineSource } from './source.js';
+export {
+  createLantmaterietLineSource,
+  createLantmaterietReliefSource,
+} from './source.js';
+export {
+  RELIEF_LAYER_ID,
+  createLantmaterietReliefLayer,
+} from './reliefLayer.js';
+export {
+  RELIEF_MANIFEST_FORMAT,
+  RELIEF_SITES,
+  validateReliefManifest,
+} from './relief.js';
 export {
   LANTMATERIET_DATASETS,
   STATIC_AREAS_FORMAT,

@@ -21,6 +21,16 @@ inventory remains in `package-lock.json`.
 - License: Apache License 2.0
 - License text: <https://www.apache.org/licenses/LICENSE-2.0>
 
+## geotiff.js
+
+- Package: `geotiff` 2.1.3 (a development dependency, used only by
+  `scripts/build-lantmateriet-hillshade.mjs` to read Lantmäteriet's elevation
+  GeoTIFFs; it is not part of the app bundle)
+- Author: EOX IT Services GmbH and contributors
+- Source: <https://github.com/geotiffjs/geotiff.js>
+- License: MIT
+- License text: <https://github.com/geotiffjs/geotiff.js/blob/master/LICENSE>
+
 ## H3
 
 - Package: `h3-js` 4.5.0 (used server-side by the `/api/gpsjam` proxy to turn

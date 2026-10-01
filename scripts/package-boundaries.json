@@ -900,7 +900,10 @@
       "src/layers/lantmateriet/geometry.js",
       "src/layers/lantmateriet/model.js",
       "src/layers/lantmateriet/source.js",
-      "src/layers/lantmateriet/records.js"
+      "src/layers/lantmateriet/records.js",
+      "src/layers/lantmateriet/relief.js",
+      "src/layers/lantmateriet/reliefLayer.js",
+      "src/maps/imageryHost.js"
     ],
     "external": ["cesium"]
   },
@@ -2146,7 +2149,10 @@
       "src/layers/lantmateriet/source.js",
       "src/layers/lantmateriet/model.js",
       "src/layers/lantmateriet/index.js",
-      "src/app/layers/lantmaterietLines.js"
+      "src/app/layers/lantmaterietLines.js",
+      "src/layers/lantmateriet/relief.js",
+      "src/layers/lantmateriet/reliefLayer.js",
+      "src/app/layers/lantmaterietRelief.js"
     ],
     "external": [
       "hls.js",
@@ -2667,7 +2673,10 @@
       "src/layers/lantmateriet/source.js",
       "src/layers/lantmateriet/model.js",
       "src/layers/lantmateriet/index.js",
-      "src/app/layers/lantmaterietLines.js"
+      "src/app/layers/lantmaterietLines.js",
+      "src/layers/lantmateriet/relief.js",
+      "src/layers/lantmateriet/reliefLayer.js",
+      "src/app/layers/lantmaterietRelief.js"
     ],
     "external": [
       "hls.js",
@@ -2956,7 +2965,8 @@
     "modules": [
       "src/layers/lantmateriet/records.js",
       "src/layers/lantmateriet/source.js",
-      "src/layers/lantmateriet/geometry.js"
+      "src/layers/lantmateriet/geometry.js",
+      "src/layers/lantmateriet/relief.js"
     ],
     "external": []
   },

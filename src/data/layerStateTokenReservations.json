@@ -14,6 +14,7 @@
   ["lantmateriet-military-areas", "z9"],
   ["lantmateriet-power-lines", "z6"],
   ["lantmateriet-railways", "z7"],
+  ["lantmateriet-relief", "za"],
   ["lantmateriet-roads", "z8"],
   ["local-dams", "q"],
   ["local-datacenters", "d"],

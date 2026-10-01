@@ -58,6 +58,10 @@ export function createApplicationTools({
   // DATA ▸ Recent Imagery: the box tool claims the pointer like Draw and the
   // panel lives on the right rail, so both belong to the application
   // lifetime. The tileset lets the layer drape while the globe is hidden.
+  // DATA ▸ Terrain Relief drapes on the tileset the same way.
+  dataManager.layers
+    .get('lantmateriet-relief')
+    ?.module?.attachTileset?.(tileset);
   const recentImagery = dataManager.layers.get('recent-imagery')?.module;
   if (recentImagery) {
     recentImagery.attachTileset(tileset);

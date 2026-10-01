@@ -1,0 +1,75 @@
+{
+  "format": "gev-relief-sites/1",
+  "source": "Lantmäteriet, Markhöjdmodell Nedladdning (1 m grid)",
+  "license": "CC BY 4.0",
+  "attribution": "© Lantmäteriet",
+  "builtAt": "2026-10-01",
+  "sites": [
+    {
+      "id": "revingehed",
+      "name": "Revingehed",
+      "west": 13.38,
+      "south": 55.645,
+      "east": 13.535,
+      "north": 55.745,
+      "minZoom": 11,
+      "maxZoom": 15,
+      "producedAt": "2026-10-01"
+    },
+    {
+      "id": "skillingaryd",
+      "name": "Skillingaryd",
+      "west": 14.09,
+      "south": 57.37,
+      "east": 14.18,
+      "north": 57.49,
+      "minZoom": 11,
+      "maxZoom": 15,
+      "producedAt": "2026-10-01"
+    },
+    {
+      "id": "tofta",
+      "name": "Tofta, Gotland",
+      "west": 18.02,
+      "south": 57.46,
+      "east": 18.24,
+      "north": 57.6,
+      "minZoom": 11,
+      "maxZoom": 15,
+      "producedAt": "2026-10-01"
+    },
+    {
+      "id": "vidsel",
+      "name": "Vidsel airbase",
+      "west": 20.05,
+      "south": 65.84,
+      "east": 20.25,
+      "north": 65.92,
+      "minZoom": 11,
+      "maxZoom": 15,
+      "producedAt": "2026-10-01"
+    },
+    {
+      "id": "hemavan",
+      "name": "Hemavan",
+      "west": 14.95,
+      "south": 65.76,
+      "east": 15.25,
+      "north": 65.88,
+      "minZoom": 11,
+      "maxZoom": 14,
+      "producedAt": "2026-10-01"
+    },
+    {
+      "id": "mierkenis",
+      "name": "Mierkenis (Merkenes)",
+      "west": 15.98,
+      "south": 66.63,
+      "east": 16.24,
+      "north": 66.73,
+      "minZoom": 11,
+      "maxZoom": 14,
+      "producedAt": "2026-10-01"
+    }
+  ]
+}

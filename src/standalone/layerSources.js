@@ -23,7 +23,10 @@ import { createGnssInterferenceSource } from '../layers/gnss/source.js';
 import { createFrontlineSource } from '../layers/frontline/source.js';
 import { createSeabedIncidentSource } from '../layers/seabed/source.js';
 import { createTrainPositionSource } from '../layers/trains/source.js';
-import { createLantmaterietLineSource } from '../layers/lantmateriet/source.js';
+import {
+  createLantmaterietLineSource,
+  createLantmaterietReliefSource,
+} from '../layers/lantmateriet/source.js';
 import { createReferenceSources } from '../sources/reference.js';
 export { createReferenceSources as createStandaloneReferenceSources } from '../sources/reference.js';
 
@@ -63,6 +66,9 @@ export function createStandaloneLayerSources() {
     'lantmateriet-roads': createLantmaterietLineSource({ dataset: 'roads' }),
     'lantmateriet-military-areas': createLantmaterietLineSource({
       dataset: 'military',
+    }),
+    'lantmateriet-relief': createLantmaterietReliefSource({
+      baseUrl: `${import.meta.env?.BASE_URL || '/'}lantmateriet-hillshade/`,
     }),
   };
 }
